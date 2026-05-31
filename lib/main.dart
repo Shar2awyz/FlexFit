@@ -1,15 +1,31 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'Pages/Components/app_route.dart';
+import 'Pages/ForgotPassword/view/ResetPasswordPage.dart';
 
 import 'package:untitled6/services/sharedpref.dart';
-import 'package:untitled6/services/theme_service.dart';
+import 'package:untitled6/services/settings_service.dart';
+import 'package:untitled6/services/notification_service.dart';
 
 import 'Pages/Dashboard/View/Dashboard.dart';
 import 'Pages/Login/View/LoginScreen.dart';
+import 'Pages/Splash/SplashScreen.dart';
+import 'Pages/WorkoutBegin/Repository.dart';
+import 'Pages/WorkoutBegin/viewmodel/cubit/WorkoutBeginCubit.dart';
+import 'Pages/Notifications/Repository/NotificationsRepository.dart';
+import 'Pages/Notifications/ViewModel/NotificationsViewModel.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize();
+
+  await Hive.initFlutter();
+  await Hive.openBox('settings');
+  await Hive.openBox('seen_stories');
 
   await Supabase.initialize(
     url: 'https://noxgwtjrnjnbzmeqlncp.supabase.co',
@@ -17,12 +33,24 @@ Future<void> main() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeService(),
+    provider.MultiProvider(
+      providers: [
+        provider.ChangeNotifierProvider(
+          create: (_) => SettingsService(),
+        ),
+        provider.ChangeNotifierProvider(
+          create: (_) => NotificationsViewModel(NotificationsRepository()),
+        ),
+        BlocProvider(
+          create: (_) => WorkoutBeginCubit(WorkoutBeginRepository()),
+        ),
+      ],
       child: const MyApp(),
     ),
   );
 }
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -35,42 +63,64 @@ class _MyAppState extends State<MyApp> {
   final sharedprefs _prefs = sharedprefs();
   String? userid;
   bool isLoading = true;
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _setupAuthListener();
+  }
+
+  void _setupAuthListener() {
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.passwordRecovery) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigatorKey.currentState?.push(
+            appRoute((_) => const ResetPasswordPage()),
+          );
+        });
+      } else if (event == AuthChangeEvent.signedIn) {
+        NotificationService.registerBackgroundSync();
+      } else if (event == AuthChangeEvent.signedOut) {
+        NotificationService.cancelBackgroundSync();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUser() async {
     userid = await _prefs.getUserId();
-    setState(() => isLoading = false);
+    if (userid != null) {
+      NotificationService.registerBackgroundSync();
+      setState(() => isLoading = false);
+    } else {
+      await Future.delayed(const Duration(seconds: 3));
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeService = context.watch<ThemeService>();
-
-    if (isLoading) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        themeMode: themeService.themeMode,
-        darkTheme: _buildDarkTheme(),
-        theme: _buildLightTheme(),
-        home: const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
+    final settingsService = provider.Provider.of<SettingsService>(context);
 
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      themeMode: themeService.themeMode,
+      themeMode: settingsService.themeMode,
       darkTheme: _buildDarkTheme(),
       theme: _buildLightTheme(),
-      home: userid == null
-          ? const LoginScreen()
-          : Dashboard(userid: userid!),
+      home: isLoading
+          ? const SplashScreen()
+          : (userid == null
+              ? const LoginScreen()
+              : Dashboard(userid: userid!)),
     );
   }
 }

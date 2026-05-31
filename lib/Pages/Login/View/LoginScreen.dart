@@ -1,13 +1,15 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../Components/LogInComponents/buildTextField.dart';
 import '../../Components/errorsnackbar.dart';
 import '../../Dashboard/View/Dashboard.dart';
-import '../../SignUpPage.dart';
+import '../../SignUp/view/SignUpPage.dart';
 import '../LoginRepository.dart';
 import '../ViewModel/ViewModel.dart';
 import 'package:provider/provider.dart';
 import '../../Components/app_route.dart';
+import '../../ForgotPassword/view/ForgotPasswordPage.dart';
+import 'package:lottie/lottie.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -62,8 +64,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   end: Alignment.bottomRight,
                 ),
               ),
-              child: SafeArea(
-                child: SingleChildScrollView(
+              child: vm.isLoading
+                  ? Center(
+                      child: SizedBox(
+                        width: 150,
+                        height: 150,
+                        child: Lottie.asset(
+                          'animation/Icon gym for Sporttler.json',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    )
+                  : SafeArea(
+                      child: SingleChildScrollView(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       minHeight: screenHeight,
@@ -136,7 +149,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    appRoute( (_) => const ForgotPasswordPage()),
+                                  );
+                                },
                                 child: Text(
                                   "Forgot Password?",
                                   style: TextStyle(

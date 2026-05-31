@@ -25,6 +25,9 @@ class LoginRepository {
 
   Stream<String?> authChanges() {
     return supabase.auth.onAuthStateChange.map((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        return null;
+      }
       final session = data.session;
       return session?.user.id;
     });

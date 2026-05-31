@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled6/theme/app_colors.dart';
 
-import '../../AddExercise/AddExercise.dart';
+
+import '../../AddExercise/view/AddExercisePage.dart';
 import '../../Components/app_route.dart';
 
 class ModifyDayPage extends StatefulWidget {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled6/theme/app_colors.dart';
 
 class CustomSearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -16,18 +17,19 @@ class CustomSearchBar extends StatelessWidget {
       height: 45,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: context.border, width: 1),
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: const TextStyle(color: Colors.white),
-        decoration: const InputDecoration(
+        style: TextStyle(color: context.textPrimary),
+        decoration: InputDecoration(
           border: InputBorder.none,
-          icon: Icon(Icons.search, color: Colors.white),
-          hintText: "Search by muscle or exercise name...",
-          hintStyle: TextStyle(color: Colors.white70),
+          icon: Icon(Icons.search, color: context.textMuted),
+          hintText: 'Search exercises...',
+          hintStyle: TextStyle(color: context.textHint),
         ),
       ),
     );

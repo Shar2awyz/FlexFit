@@ -60,29 +60,50 @@ class WorkoutBeginRepository {
     return res?['id'];
   }
 
-  Future<List<dynamic>> getPreviousSets({required String exerciseId}) async {
+  Future<List<dynamic>> getPreviousSets({
+    required String exerciseId,
+    String? excludeWorkoutId,
+  }) async {
     try {
+      final userId = supabase.auth.currentUser!.id;
+
+      // Fetch all workout_exercises for this exercise belonging to this user.
+      // Same pattern as ExerciseHistoryRepository — filter related table via !inner.
       final we = await supabase
           .from('workout_exercises')
-          .select('''
-            id,
-            workouts!inner (date)
-          ''')
+          .select('id, workout_id, workouts!inner(date, user_id)')
           .eq('exercise_id', exerciseId)
-          .eq('workouts.user_id', supabase.auth.currentUser!.id)
-          .order('date', referencedTable: 'workouts', ascending: false)
-          .limit(1);
+          .eq('workouts.user_id', userId);
 
-      if (we.isEmpty) return [];
+      if ((we as List).isEmpty) return [];
+
+      // Filter out the current (in-progress) workout in Dart to avoid
+      // query-builder issues with chained .neq() on related-table filters.
+      final filtered = we
+          .where((w) => w['workout_id'] != excludeWorkoutId)
+          .toList();
+
+      if (filtered.isEmpty) return [];
+
+      // Sort by workout date descending to find the most recent session.
+      filtered.sort((a, b) {
+        final da = (a['workouts'] as Map)['date'] as String?;
+        final db = (b['workouts'] as Map)['date'] as String?;
+        if (da == null) return 1;
+        if (db == null) return -1;
+        return db.compareTo(da);
+      });
 
       final sets = await supabase
           .from('sets')
           .select('reps, weight, set_number')
-          .eq('workout_exercise_id', we[0]['id'])
+          .eq('workout_exercise_id', filtered[0]['id'] as String)
           .order('set_number');
 
-      return sets;
-    } catch (e) {
+      return sets as List;
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('getPreviousSets error: $e\n$st');
       return [];
     }
   }

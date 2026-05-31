@@ -1,31 +1,39 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled6/theme/app_colors.dart';
 
-import '../../AddExercise/AddExercise.dart';
+
+import '../../AddExercise/view/AddExercisePage.dart';
 import '../../Components/app_route.dart';
 import '../viewmodel/cubit/WorkoutBeginCubit.dart';
 import '../viewmodel/cubit/WorkoutBeginState.dart';
-import '../Repository.dart';
+import '../model/SetModel.dart';
 
 class WorkoutBegin extends StatelessWidget {
   final String dayId;
   final String dayName;
+  final bool resume;
 
-  const WorkoutBegin({super.key, required this.dayId, required this.dayName});
+  const WorkoutBegin({
+    super.key,
+    required this.dayId,
+    required this.dayName,
+    this.resume = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => WorkoutBeginCubit(WorkoutBeginRepository())
-        ..startWorkout(
-          userId: Supabase.instance.client.auth.currentUser!.id,
-          dayId: dayId,
-          name: dayName,
-        ),
-      child: _WorkoutBeginView(dayName: dayName),
-    );
+    final cubit = context.read<WorkoutBeginCubit>();
+    if (!resume) {
+      cubit.startWorkout(
+        userId: Supabase.instance.client.auth.currentUser!.id,
+        dayId: dayId,
+        name: dayName,
+      );
+    }
+    return _WorkoutBeginView(dayName: dayName);
   }
 }
 
@@ -41,13 +49,72 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
   final Map<String, List<TextEditingController>> _weightCtrl = {};
   final Map<String, List<TextEditingController>> _repsCtrl = {};
   final Map<String, List<bool>> _completed = {};
+  final Map<String, List<String>> _setIds = {};
+  int _nextSetId = 0;
+  final Set<String> _dismissedExerciseIds = {};
 
-  void _initExercise(String id, {int count = 1}) {
+  Timer? _timer;
+  String _elapsedTimeString = '00:00';
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      final cubit = context.read<WorkoutBeginCubit>();
+      if (cubit.startTime != null) {
+        final diff = DateTime.now().difference(cubit.startTime!);
+        final hours = diff.inHours;
+        final minutes = diff.inMinutes.remainder(60);
+        final seconds = diff.inSeconds.remainder(60);
+
+        final hoursStr = hours > 0 ? '${hours.toString().padLeft(2, '0')}:' : '';
+        final minutesStr = minutes.toString().padLeft(2, '0');
+        final secondsStr = seconds.toString().padLeft(2, '0');
+
+        setState(() {
+          _elapsedTimeString = '$hoursStr$minutesStr:$secondsStr';
+        });
+      }
+    });
+  }
+
+  void _initExercise(String id, List<SetModel> sets, {int plannedCount = 3}) {
     if (_weightCtrl.containsKey(id)) return;
-    final n = count < 1 ? 1 : count;
-    _weightCtrl[id] = List.generate(n, (_) => TextEditingController());
-    _repsCtrl[id] = List.generate(n, (_) => TextEditingController());
-    _completed[id] = List.filled(n, false, growable: true);
+
+    final completedCount = sets.length;
+    final totalRows = completedCount > plannedCount ? completedCount : plannedCount;
+
+    final weights = <TextEditingController>[];
+    final reps = <TextEditingController>[];
+    final completedList = <bool>[];
+    final ids = <String>[];
+
+    for (int i = 0; i < totalRows; i++) {
+      ids.add('${id}_set_init_${_nextSetId++}');
+      if (i < completedCount) {
+        final setModel = sets[i];
+        final wText = setModel.weight % 1 == 0
+            ? setModel.weight.toInt().toString()
+            : setModel.weight.toString();
+        weights.add(TextEditingController(text: wText));
+        reps.add(TextEditingController(text: setModel.reps.toString()));
+        completedList.add(true);
+      } else {
+        weights.add(TextEditingController());
+        reps.add(TextEditingController());
+        completedList.add(false);
+      }
+    }
+
+    _weightCtrl[id] = weights;
+    _repsCtrl[id] = reps;
+    _completed[id] = completedList;
+    _setIds[id] = ids;
   }
 
   void _addSetFor(String id) {
@@ -55,6 +122,7 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
       _weightCtrl[id]!.add(TextEditingController());
       _repsCtrl[id]!.add(TextEditingController());
       _completed[id]!.add(false);
+      _setIds[id]!.add('${id}_set_add_${_nextSetId++}');
     });
   }
 
@@ -62,10 +130,12 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
     for (final c in _weightCtrl.remove(id) ?? []) { c.dispose(); }
     for (final c in _repsCtrl.remove(id) ?? []) { c.dispose(); }
     _completed.remove(id);
+    _setIds.remove(id);
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     for (final list in _weightCtrl.values) {
       for (final c in list) { c.dispose(); }
     }
@@ -88,6 +158,7 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
       _weightCtrl[exerciseId]!.removeAt(uiIndex);
       _repsCtrl[exerciseId]!.removeAt(uiIndex);
       _completed[exerciseId]!.removeAt(uiIndex);
+      _setIds[exerciseId]!.removeAt(uiIndex);
     });
 
     if (wasCompleted) {
@@ -253,8 +324,9 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
 
           if (state is WorkoutBeginLoaded) {
             final exercises = state.exercises;
+            _dismissedExerciseIds.removeWhere((id) => !exercises.any((e) => e.exerciseId == id));
             for (final ex in exercises) {
-              _initExercise(ex.exerciseId, count: ex.plannedSets);
+              _initExercise(ex.exerciseId, ex.sets, plannedCount: ex.plannedSets);
             }
 
             return Column(
@@ -274,9 +346,9 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _StatItem(
-                          label: 'Exercises',
-                          value: '${exercises.length}',
-                          icon: Icons.fitness_center_rounded,
+                          label: 'Time',
+                          value: _elapsedTimeString,
+                          icon: Icons.timer_outlined,
                         ),
                         Container(
                             height: 32, width: 1, color: context.divider),
@@ -312,8 +384,9 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
                     },
                     children: [
                       for (final entry in exercises.asMap().entries)
-                        _buildExerciseCard(
-                            context, sw, entry.key, entry.value),
+                        if (!_dismissedExerciseIds.contains(entry.value.exerciseId))
+                          _buildExerciseCard(
+                              context, sw, entry.key, entry.value),
                     ],
                   ),
                 ),
@@ -358,28 +431,59 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
 
   Widget _buildExerciseCard(
       BuildContext context, double sw, int index, dynamic ex) {
-    return Padding(
+    return Dismissible(
       key: ValueKey(ex.exerciseId),
-      padding: EdgeInsets.only(bottom: sw * 0.03),
-      child: _ExerciseCard(
-        sw: sw,
-        index: index,
-        exercise: ex,
-        weightControllers: _weightCtrl[ex.exerciseId]!,
-        repsControllers: _repsCtrl[ex.exerciseId]!,
-        completed: _completed[ex.exerciseId]!,
-        onAddSet: () => _addSetFor(ex.exerciseId),
-        onReplace: () => _onExerciseReplace(ex.exerciseId),
-        onSetDismissed: (uiIndex) =>
-            _onSetDismissed(ex.exerciseId, uiIndex),
-        onComplete: (i, weight, reps) {
-          setState(() => _completed[ex.exerciseId]![i] = true);
-          context.read<WorkoutBeginCubit>().addSet(
-                exerciseIndex: index,
-                reps: reps,
-                weight: weight,
-              );
-        },
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: sw * 0.05),
+        margin: EdgeInsets.only(bottom: sw * 0.03),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(sw * 0.04),
+        ),
+        child: Icon(Icons.delete_outline_rounded,
+            color: Colors.redAccent, size: sw * 0.055),
+      ),
+      onDismissed: (_) {
+        setState(() {
+          _dismissedExerciseIds.add(ex.exerciseId);
+          _disposeExercise(ex.exerciseId);
+        });
+        context.read<WorkoutBeginCubit>().removeExercise(ex.exerciseId);
+      },
+      child: Padding(
+        padding: EdgeInsets.only(bottom: sw * 0.03),
+        child: _ExerciseCard(
+          sw: sw,
+          index: index,
+          exercise: ex,
+          weightControllers: _weightCtrl[ex.exerciseId]!,
+          repsControllers: _repsCtrl[ex.exerciseId]!,
+          completed: _completed[ex.exerciseId]!,
+          setIds: _setIds[ex.exerciseId]!,
+          onAddSet: () => _addSetFor(ex.exerciseId),
+          onReplace: () => _onExerciseReplace(ex.exerciseId),
+          onSetDismissed: (uiIndex) =>
+              _onSetDismissed(ex.exerciseId, uiIndex),
+          onComplete: (i, weight, reps) {
+            setState(() => _completed[ex.exerciseId]![i] = true);
+            context.read<WorkoutBeginCubit>().addSet(
+                  exerciseIndex: index,
+                  reps: reps,
+                  weight: weight,
+                );
+          },
+          onUncomplete: (i) {
+            final completedList = List<bool>.from(_completed[ex.exerciseId]!);
+            final setsListIndex =
+                completedList.sublist(0, i).where((c) => c).length;
+            setState(() => _completed[ex.exerciseId]![i] = false);
+            context
+                .read<WorkoutBeginCubit>()
+                .removeSet(ex.exerciseId, setsListIndex);
+          },
+        ),
       ),
     );
   }
@@ -394,10 +498,12 @@ class _ExerciseCard extends StatelessWidget {
   final List<TextEditingController> weightControllers;
   final List<TextEditingController> repsControllers;
   final List<bool> completed;
+  final List<String> setIds;
   final VoidCallback onAddSet;
   final VoidCallback onReplace;
   final void Function(int uiIndex) onSetDismissed;
   final void Function(int index, double weight, int reps) onComplete;
+  final void Function(int index) onUncomplete;
 
   const _ExerciseCard({
     required this.exercise,
@@ -406,10 +512,12 @@ class _ExerciseCard extends StatelessWidget {
     required this.weightControllers,
     required this.repsControllers,
     required this.completed,
+    required this.setIds,
     required this.onAddSet,
     required this.onReplace,
     required this.onSetDismissed,
     required this.onComplete,
+    required this.onUncomplete,
   });
 
   @override
@@ -545,15 +653,36 @@ class _ExerciseCard extends StatelessWidget {
           // ── set rows ──────────────────────────────────────────────────
           Column(
             children: List.generate(weightControllers.length, (i) {
-              String prev = '—';
-              if (i < ex.previousSets.length) {
-                final p = ex.previousSets[i];
-                prev = '${p.weight}×${p.reps}';
+              final hasPrev = i < ex.previousSets.length;
+              final prevSet = hasPrev ? ex.previousSets[i] : null;
+              final isSuggestion = hasPrev && prevSet!.reps >= 20;
+
+              String prevText = hasPrev
+                  ? '${prevSet!.weight % 1 == 0 ? prevSet.weight.toInt() : prevSet.weight}×${prevSet.reps}'
+                  : '—';
+
+              String weightHint = '0';
+              String repsHint = '0';
+              if (hasPrev) {
+                if (isSuggestion) {
+                  final raw = prevSet!.weight * 1.05;
+                  final sugW = (raw * 2).round() / 2.0;
+                  weightHint = sugW % 1 == 0
+                      ? sugW.toInt().toString()
+                      : sugW.toStringAsFixed(1);
+                  repsHint = '6';
+                } else {
+                  final w = prevSet!.weight;
+                  weightHint = w % 1 == 0 ? w.toInt().toString() : w.toStringAsFixed(1);
+                  repsHint = prevSet.reps.toString();
+                }
               }
+
               final isDone = completed[i];
+              final setId = setIds[i];
 
               return Dismissible(
-                key: ValueKey('${ex.exerciseId}_set_$i'),
+                key: ValueKey(setId),
                 direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
@@ -602,7 +731,7 @@ class _ExerciseCard extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          prev,
+                          prevText,
                           style: TextStyle(
                               color: context.textMuted,
                               fontSize: sw * 0.032),
@@ -621,7 +750,7 @@ class _ExerciseCard extends StatelessWidget {
                               fontSize: sw * 0.036,
                               fontWeight: FontWeight.w600),
                           decoration: InputDecoration(
-                            hintText: '0',
+                            hintText: weightHint,
                             hintStyle: TextStyle(
                                 color: context.textHint,
                                 fontSize: sw * 0.036),
@@ -641,7 +770,7 @@ class _ExerciseCard extends StatelessWidget {
                               fontSize: sw * 0.036,
                               fontWeight: FontWeight.w600),
                           decoration: InputDecoration(
-                            hintText: '0',
+                            hintText: repsHint,
                             hintStyle: TextStyle(
                                 color: context.textHint,
                                 fontSize: sw * 0.036),
@@ -654,14 +783,18 @@ class _ExerciseCard extends StatelessWidget {
                         width: sw * 0.11,
                         child: GestureDetector(
                           onTap: () {
-                            final weight = double.tryParse(
-                                    weightControllers[i].text) ??
-                                0;
-                            final reps = int.tryParse(
-                                    repsControllers[i].text) ??
-                                0;
-                            if (weight == 0 || reps == 0) return;
-                            onComplete(i, weight, reps);
+                            if (isDone) {
+                              onUncomplete(i);
+                            } else {
+                              final weight = double.tryParse(
+                                      weightControllers[i].text) ??
+                                  0;
+                              final reps = int.tryParse(
+                                      repsControllers[i].text) ??
+                                  0;
+                              if (weight == 0 || reps == 0) return;
+                              onComplete(i, weight, reps);
+                            }
                           },
                           child: Container(
                             padding: EdgeInsets.all(sw * 0.02),

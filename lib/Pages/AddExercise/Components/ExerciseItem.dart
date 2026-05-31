@@ -1,33 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:untitled6/theme/app_colors.dart';
 
-class ExerciseItem extends StatefulWidget {
+class ExerciseItem extends StatelessWidget {
   final String title;
   final String subtitle;
-  
   final VoidCallback onAdd;
   final String image;
+  final bool isSelected;
+
   const ExerciseItem({
     super.key,
     required this.title,
     required this.subtitle,
     required this.onAdd,
-    required this.image
+    required this.image,
+    required this.isSelected,
   });
-
-  @override
-  State<ExerciseItem> createState() => _ExerciseItemState();
-}
-
-class _ExerciseItemState extends State<ExerciseItem> {
-  bool isAdded = false;
-
-  void toggle() {
-    setState(() {
-      isAdded = !isAdded;
-    });
-
-    widget.onAdd(); // ✅ call callback
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,54 +23,73 @@ class _ExerciseItemState extends State<ExerciseItem> {
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.border, width: 1),
       ),
       child: Row(
         children: [
-         ClipRRect(
-
-           borderRadius: BorderRadius.circular(30),
-           child: 
-           Image.network(this.widget.image,width: 30,height :30),
-           
-         ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: image.isNotEmpty
+                ? Image.network(
+                    image,
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => Icon(
+                      Icons.fitness_center,
+                      size: 30,
+                      color: context.accentLight,
+                    ),
+                  )
+                : Icon(
+                    Icons.fitness_center,
+                    size: 30,
+                    color: context.accentLight,
+                  ),
+          ),
           const SizedBox(width: 12),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.title,
-                  style: const TextStyle(
+                  title,
+                  style: TextStyle(
+                    color: context.textPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 15,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  widget.subtitle,
-                  style: const TextStyle(color: Colors.grey),
+                  subtitle,
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
-
           GestureDetector(
-            onTap: toggle,
-            child: Container(
+            onTap: onAdd,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               height: 36,
               width: 36,
               decoration: BoxDecoration(
-                color: const Color(0xFF1565C0),
+                color: isSelected ? context.accent : context.accentBg,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
-                isAdded ? Icons.remove : Icons.add,
-                color: Colors.white,
+                isSelected ? Icons.check_rounded : Icons.add_rounded,
+                color: isSelected ? Colors.white : context.accentLight,
+                size: 20,
               ),
             ),
-          )
+          ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled6/theme/app_colors.dart';
 
 class CategoryChip extends StatelessWidget {
   final String label;
@@ -21,16 +22,17 @@ class CategoryChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         height: 36,
         decoration: BoxDecoration(
-          color: selected
-              ? Colors.white
-              : Colors.white.withOpacity(0.2),
+          color: selected ? context.accent : context.cardBg,
           borderRadius: BorderRadius.circular(20),
+          border: selected
+              ? null
+              : Border.all(color: context.border, width: 1),
         ),
         alignment: Alignment.center,
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.black : Colors.white,
+            color: selected ? Colors.white : context.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),

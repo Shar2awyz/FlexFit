@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:untitled6/theme/app_colors.dart';
 
-import 'package:untitled6/Pages/Exercise_Details/Exercisedetails.dart';
+import 'package:untitled6/Pages/ExerciseDetails/view/ExerciseDetailsPage.dart';
 import 'package:untitled6/Pages/Exercises_Components/Exercises_Component.dart';
-import 'package:untitled6/Pages/Start_Workout.dart';
+import 'package:untitled6/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:untitled6/Pages/Social/view/SocialFeedPage.dart';
 
 import 'Components/CustomBottomNavBar.dart';
 import 'Components/app_route.dart';
 import 'Dashboard/View/Dashboard.dart';
-import 'Profile.dart';
+import 'Profile/view/ProfilePage.dart';
 
 class Exercises extends StatelessWidget {
   final String userid;
@@ -70,6 +71,23 @@ class Exercises extends StatelessWidget {
           } else if (i == 3) {
             Navigator.pushReplacement(
                 context, appRoute((_) => Profile(userid: userid)));
+          } else if (i == 4) {
+            Navigator.push(
+              context,
+              appRoute((_) => SocialFeedPage(
+                currentUserId: userid,
+                onNavTap: (tab) {
+                  Navigator.pop(context);
+                  if (tab == 0) {
+                    Navigator.pushReplacement(context, appRoute((_) => Dashboard(userid: userid)));
+                  } else if (tab == 1) {
+                    Navigator.pushReplacement(context, appRoute((_) => StartWorkout(userid: userid)));
+                  } else if (tab == 3) {
+                    Navigator.pushReplacement(context, appRoute((_) => Profile(userid: userid)));
+                  }
+                },
+              )),
+            );
           }
         },
       ),

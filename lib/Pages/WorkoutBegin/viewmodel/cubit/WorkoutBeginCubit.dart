@@ -12,6 +12,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
 
   String? workoutId;
   String? _splitDayId;
+  String? workoutName;
   DateTime? startTime;
 
   List<ExerciseWithSets> exercises = [];
@@ -21,6 +22,9 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
 
   final Set<String> _exercisesAddedThisWorkout = {};
   bool _orderChanged = false;
+
+  String? get splitDayId => _splitDayId;
+  bool get isWorkoutInProgress => state is WorkoutBeginLoaded || state is WorkoutBeginLoading;
 
   bool get hasStructuralChanges =>
       _exercisesAddedThisWorkout.isNotEmpty || _orderChanged;
@@ -37,6 +41,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     required String name,
   }) async {
     _splitDayId = dayId;
+    workoutName = name;
     emit(WorkoutBeginLoading());
 
     try {
@@ -54,7 +59,8 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
           exerciseId: ex['id'],
           order: order++,
         );
-        final prev = await repo.getPreviousSets(exerciseId: ex['id']);
+        final prev = await repo.getPreviousSets(
+            exerciseId: ex['id'], excludeWorkoutId: workoutId);
         final setsCount = (e['sets_count'] as int?) ?? 3;
         temp.add(ExerciseWithSets(
           exerciseId: ex['id'],
@@ -136,7 +142,8 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
         exerciseId: exData['id'],
         order: order,
       );
-      final prev = await repo.getPreviousSets(exerciseId: exData['id']);
+      final prev = await repo.getPreviousSets(
+          exerciseId: exData['id'], excludeWorkoutId: workoutId);
       exercises.add(ExerciseWithSets(
         exerciseId: exData['id'],
         name: exData['name'],
@@ -172,7 +179,8 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     if (idx == -1) return;
 
     final oldEx = exercises[idx];
-    final prev = await repo.getPreviousSets(exerciseId: newExData['id']);
+    final prev = await repo.getPreviousSets(
+        exerciseId: newExData['id'], excludeWorkoutId: workoutId);
 
     exercises[idx] = ExerciseWithSets(
       exerciseId: newExData['id'],

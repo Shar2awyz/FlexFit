@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled6/theme/app_colors.dart';
 
-import '../../AddExercise/AddExercise.dart';
+import '../../AddExercise/view/AddExercisePage.dart';
 import '../../Components/app_route.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../WorkoutBegin/view/WorkoutBegin.dart';
+import '../../WorkoutBegin/viewmodel/cubit/WorkoutBeginCubit.dart';
 import 'ModifyDayPage.dart';
 import '../model/SplitDay.dart';
 import '../model/ExerciseModel.dart';
@@ -310,11 +312,61 @@ class _DayCard extends StatelessWidget {
               ),
               // start button
               GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  appRoute((_) =>
-                      WorkoutBegin(dayId: day.id, dayName: day.name)),
-                ),
+                onTap: () {
+                  final activeWorkoutCubit = context.read<WorkoutBeginCubit>();
+                  if (activeWorkoutCubit.isWorkoutInProgress) {
+                    if (activeWorkoutCubit.splitDayId == day.id) {
+                      Navigator.push(
+                        context,
+                        appRoute((_) => WorkoutBegin(
+                              dayId: day.id,
+                              dayName: day.name,
+                              resume: true,
+                            )),
+                      );
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Workout in progress'),
+                          content: Text(
+                              'A workout "${activeWorkoutCubit.workoutName}" is already in progress. Do you want to discard it and start "${day.name}"?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.pop(ctx);
+                                final nav = Navigator.of(context);
+                                await activeWorkoutCubit.deleteWorkout();
+                                nav.push(
+                                  appRoute((_) => WorkoutBegin(
+                                        dayId: day.id,
+                                        dayName: day.name,
+                                      )),
+                                );
+                              },
+                              child: const Text(
+                                'Discard & Start',
+                                style: TextStyle(color: Colors.redAccent),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  } else {
+                    Navigator.push(
+                      context,
+                      appRoute((_) => WorkoutBegin(
+                            dayId: day.id,
+                            dayName: day.name,
+                          )),
+                    );
+                  }
+                },
                 child: Container(
                   padding: EdgeInsets.all(sw * 0.025),
                   decoration: BoxDecoration(

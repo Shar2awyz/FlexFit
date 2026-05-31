@@ -1,20 +1,20 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:untitled6/Pages/Components/DashboardPageComponents/DashboardSummary.dart';
 import 'package:untitled6/Pages/Exercises.dart';
-import 'package:untitled6/Pages/Profile.dart';
-import 'package:untitled6/Pages/Start_Workout.dart';
-import 'package:untitled6/services/sharedpref.dart';
+import 'package:untitled6/Pages/Profile/view/ProfilePage.dart';
+import 'package:untitled6/Pages/Social/SocialNotificationService.dart';
+import 'package:untitled6/Pages/Social/view/SocialFeedPage.dart';
+import 'package:untitled6/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:untitled6/theme/app_colors.dart';
 
 import '../../Components/CustomBottomNavBar.dart';
 import '../../Components/app_route.dart';
 import '../../Login/View/LoginScreen.dart';
+import 'package:lottie/lottie.dart';
 import '../Repository.dart';
 import '../ViewModel/DashboardViewModel.dart';
-
-
-// 🔹 IMPORT YOUR VM + REPO
-
+import '../../Notifications/ViewModel/NotificationsViewModel.dart';
 
 class Dashboard extends StatelessWidget {
   final String userid;
@@ -23,59 +23,106 @@ class Dashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) =>
-      DashboardViewModel(DashboardRepository())..load(userid),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => DashboardViewModel(DashboardRepository())..load(userid),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              SocialNotificationService(userId: userid)..initialize(),
+        ),
+      ],
       child: _DashboardView(userid: userid),
     );
   }
 }
 
-class _DashboardView extends StatelessWidget {
+class _DashboardView extends StatefulWidget {
   final String userid;
 
-  const _DashboardView({required this.userid});
+  const _DashboardView({super.key, required this.userid});
+
+  @override
+  State<_DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<_DashboardView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NotificationsViewModel>().initialize(widget.userid);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DashboardViewModel>();
+    final notifService = context.watch<SocialNotificationService>();
+    // We watch NotificationsViewModel here to trigger badge updates if needed, though they also happen reactive.
+    context.watch<NotificationsViewModel>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E3A8A),
+      backgroundColor: context.pageBg,
 
-      /// ✅ Bottom Nav (same behavior, cleaner state)
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: vm.index,
+        currentIndex: 0,
+        showSocialBadge: notifService.hasBadge,
         onTap: (i) {
-          vm.changeIndex(i);
-
-          if (i == 3) {
+          if (i == 0) return;
+          if (i == 4) {
+            notifService.markAsSeen();
             Navigator.push(
               context,
-              appRoute( (_) => Profile(userid: userid),
-              ),
+              appRoute((_) => SocialFeedPage(
+                currentUserId: widget.userid,
+                onNavTap: (tab) {
+                  Navigator.pop(context);
+                  if (tab == 1) {
+                    Navigator.push(context, appRoute((_) => StartWorkout(userid: widget.userid)));
+                  } else if (tab == 2) {
+                    Navigator.push(context, appRoute((_) => Exercises(userid: widget.userid)));
+                  } else if (tab == 3) {
+                    Navigator.push(context, appRoute((_) => Profile(userid: widget.userid)));
+                  }
+                },
+              )),
+            );
+          } else if (i == 3) {
+            Navigator.push(
+              context,
+              appRoute((_) => Profile(userid: widget.userid)),
             );
           } else if (i == 2) {
             Navigator.push(
               context,
-              appRoute( (_) => Exercises(userid: userid),
-              ),
+              appRoute((_) => Exercises(userid: widget.userid)),
             );
           } else if (i == 1) {
             Navigator.push(
               context,
-              appRoute( (_) => StartWorkout(userid: userid),
-              ),
+              appRoute((_) => StartWorkout(userid: widget.userid)),
             );
           }
         },
       ),
 
-      /// ✅ Body (replaces FutureBuilder)
       body: Builder(
-        builder: (_) {
+        builder: (ctx) {
           if (vm.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: SizedBox(
+                width: 100,
+                height: 100,
+                child: Lottie.asset(
+                  'animation/Icon gym for Sporttler.json',
+                  fit: BoxFit.contain,
+                ),
+              ),
+            );
           }
 
           if (vm.error != null) {
@@ -87,41 +134,18 @@ class _DashboardView extends StatelessWidget {
           }
 
           final data = vm.data!;
+          final mq = MediaQuery.of(ctx);
+          final sw = mq.size.width;
+          final topPad = mq.padding.top;
 
-          return Stack(
-            children: [
-              /// ✅ Main UI (unchanged)
-              Dashboardsummary(
-                username: data['username'] ?? "User",
-                workouts: vm.workoutCount,
-                calories: 1200,
-                time: vm.totalDurationMinutes,
-                progress: 75,
-                photo: data['image_url'],
-                history: vm.workoutHistory,
-              ),
-
-              /// ✅ Logout Button (cleaned)
-              Positioned(
-                top: 50,
-                right: 20,
-                child: IconButton(
-                  onPressed: () async {
-                    await vm.logout();
-
-                    if (!context.mounted) return;
-
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      appRoute( (_) => const LoginScreen(),
-                      ),
-                          (route) => false,
-                    );
-                  },
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                ),
-              ),
-            ],
+          return Dashboardsummary(
+            username: data['username'] ?? "User",
+            workouts: vm.workoutCount,
+            calories: 1200,
+            time: vm.totalDurationMinutes,
+            progress: vm.progress,
+            photo: data['image_url'],
+            history: vm.workoutHistory,
           );
         },
       ),

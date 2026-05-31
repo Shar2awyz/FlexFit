@@ -1,0 +1,78 @@
+-- Create the notifications table
+CREATE TABLE public.notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES public."Users"(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL, -- e.g., 'workout_reminder', 'streak_3', 'streak_7', 'friend_request_received', etc.
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS (Row Level Security) if your other tables have it enabled
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+-- Allow users to read, update, and delete only their own notifications
+CREATE POLICY "Users can view their own notifications"
+  ON public.notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own notifications"
+  ON public.notifications FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own notifications"
+  ON public.notifications FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Allow inserts (so backend or app-side simulation can write notifications)
+CREATE POLICY "Anyone can insert notifications"
+  ON public.notifications FOR INSERT
+  WITH CHECK (true);
+
+-- Add table to realtime publication
+ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+
+-- ── FRIENDSHIP AUTOMATED NOTIFICATIONS TRIGGER ─────────────────────────────────
+
+-- Function to handle friend request notifications automatically on the database
+CREATE OR REPLACE FUNCTION public.handle_friendship_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+  sender_username TEXT;
+BEGIN
+  IF TG_OP = 'INSERT' AND NEW.status = 'pending' THEN
+    -- Fetch username of the sender (requester)
+    SELECT username INTO sender_username FROM public."Users" WHERE id = NEW.requester_id;
+    
+    INSERT INTO public.notifications (user_id, title, message, type, is_read)
+    VALUES (
+      NEW.addressee_id,
+      'Friend Request Received',
+      COALESCE(sender_username, 'Someone') || ' sent you a friend request.',
+      'friend_request_received',
+      FALSE
+    );
+  ELSIF TG_OP = 'UPDATE' AND NEW.status = 'accepted' AND OLD.status = 'pending' THEN
+    -- Fetch username of the person who accepted (addressee)
+    SELECT username INTO sender_username FROM public."Users" WHERE id = NEW.addressee_id;
+    
+    INSERT INTO public.notifications (user_id, title, message, type, is_read)
+    VALUES (
+      NEW.requester_id,
+      'Friend Request Accepted',
+      COALESCE(sender_username, 'Someone') || ' accepted your friend request.',
+      'friend_request_accepted',
+      FALSE
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to execute the function on public.friendships
+CREATE OR REPLACE TRIGGER on_friendship_change
+  AFTER INSERT OR UPDATE ON public.friendships
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_friendship_notification();
+

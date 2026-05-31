@@ -22,12 +22,13 @@ class _FinalComponentState extends State<FinalComponent> {
   bool isExpanded = false;
 
   List<Map<String, dynamic>> sets = [
-    {"reps": "", "weight": ""},
+    {"id": "set_0", "reps": "", "weight": ""},
   ];
+  int _nextSetId = 1;
 
   void addSet() {
     setState(() {
-      sets.add({"reps": "", "weight": ""});
+      sets.add({"id": "set_${_nextSetId++}", "reps": "", "weight": ""});
     });
   }
 
@@ -112,8 +113,9 @@ class _FinalComponentState extends State<FinalComponent> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: sets.length,
               itemBuilder: (context, index) {
+                final setItem = sets[index];
                 return Dismissible(
-                  key: Key(index.toString()),
+                  key: ValueKey(setItem["id"]),
 
                   direction: DismissDirection.endToStart,
 

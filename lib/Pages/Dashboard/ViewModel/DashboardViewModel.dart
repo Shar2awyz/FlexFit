@@ -13,8 +13,7 @@ class DashboardViewModel extends ChangeNotifier {
   List<WorkoutHistoryModel> workoutHistory = [];
   bool isLoading = false;
   String? error;
-
-  int index = 0;
+  int progress = 0;
 
   int get workoutCount => workoutHistory.length;
 
@@ -30,19 +29,16 @@ class DashboardViewModel extends ChangeNotifier {
       final results = await Future.wait<dynamic>([
         repo.getDashboardData(userId),
         repo.getWorkoutHistory(userId),
+        repo.getTrackedProgress(userId),
       ]);
       data = results[0] as Map<String, dynamic>?;
       workoutHistory = results[1] as List<WorkoutHistoryModel>;
+      progress = results[2] as int;
     } catch (e) {
       error = "Failed to load data";
     }
 
     isLoading = false;
-    notifyListeners();
-  }
-
-  void changeIndex(int i) {
-    index = i;
     notifyListeners();
   }
 

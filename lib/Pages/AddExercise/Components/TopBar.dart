@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled6/theme/app_colors.dart';
 
 class TopBar extends StatelessWidget {
   final VoidCallback onBack;
@@ -18,13 +19,13 @@ class TopBar extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: onBack,
-            child: const Icon(Icons.arrow_back, color: Colors.white),
+            child: Icon(Icons.arrow_back, color: context.textPrimary),
           ),
           const SizedBox(width: 10),
-          const Text(
-            "New Split",
+          Text(
+            'Add Exercise',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -32,9 +33,20 @@ class TopBar extends StatelessWidget {
           const Spacer(),
           GestureDetector(
             onTap: onFinish,
-            child: const Text(
-              "Finish",
-              style: TextStyle(color: Colors.white),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              decoration: BoxDecoration(
+                color: context.accent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Done',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],
