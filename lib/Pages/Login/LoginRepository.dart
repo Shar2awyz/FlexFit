@@ -1,21 +1,33 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+class InvalidCredentialsException implements Exception {
+  final String message;
+  InvalidCredentialsException([this.message = 'Invalid credentials exception']);
+
+  @override
+  String toString() => message;
+}
+
 class LoginRepository {
   final supabase = Supabase.instance.client;
 
   Future<String> login(String email, String password) async {
-    final res = await supabase.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      final res = await supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-    final user = res.user;
+      final user = res.user;
 
-    if (user == null) {
-      throw Exception("Login failed");
+      if (user == null) {
+        throw InvalidCredentialsException("Login failed");
+      }
+
+      return user.id;
+    } on AuthException catch (e) {
+      throw InvalidCredentialsException("Invalid credentials exception");
     }
-
-    return user.id;
   }
 
   Future<void> loginWithGoogle() async {

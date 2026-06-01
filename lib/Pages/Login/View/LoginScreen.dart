@@ -188,19 +188,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onPressed: vm.isLoading
                                     ? null
                                     : () {
-                                  vm.login((userId) {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      appRoute( (_) =>
-                                            Dashboard(userid: userId),
-                                      ),
-                                    );
-                                  });
-
-                                  if (vm.error != null) {
-                                    ErrorSnackBar.show(
-                                        context, vm.error!);
-                                  }
+                                  vm.login(
+                                    onSuccess: (userId) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        appRoute( (_) =>
+                                              Dashboard(userid: userId),
+                                        ),
+                                      );
+                                    },
+                                    onError: (message) {
+                                      ErrorSnackBar.show(context, message);
+                                    },
+                                  );
                                 },
                                 child: vm.isLoading
                                     ? const CircularProgressIndicator()

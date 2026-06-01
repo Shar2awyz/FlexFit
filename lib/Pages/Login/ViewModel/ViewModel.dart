@@ -29,7 +29,10 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   /// login
-  Future<void> login(void Function(String userId) onSuccess) async {
+  Future<void> login({
+    required void Function(String userId) onSuccess,
+    required void Function(String message) onError,
+  }) async {
     isLoading = true;
     error = null;
     notifyListeners();
@@ -43,12 +46,16 @@ class LoginViewModel extends ChangeNotifier {
       await sharedprefs().saveUserId(userId);
 
       onSuccess(userId);
+    } on InvalidCredentialsException catch (e) {
+      error = e.toString();
+      onError(error!);
     } catch (e) {
-      error = "Invalid email or password";
+      error = "An unexpected error occurred";
+      onError(error!);
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
-
-    isLoading = false;
-    notifyListeners();
   }
 
   /// google login

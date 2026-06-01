@@ -55,46 +55,64 @@ class WorkoutHistoryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    workout.name,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: (ref * 0.038).clamp(13.0, 20.0),
-                      fontWeight: FontWeight.bold,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      workout.name,
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: (ref * 0.038).clamp(13.0, 20.0),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: (ref * 0.01).clamp(2.0, 6.0)),
-                  Text(
-                    '${workout.exerciseCount} exercises · ${workout.totalSets} sets',
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: (ref * 0.031).clamp(11.0, 16.0),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${workout.exerciseCount} exercises · ${workout.totalSets} sets',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: (ref * 0.031).clamp(11.0, 16.0),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  workout.formattedDuration,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: (ref * 0.034).clamp(12.0, 18.0),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      workout.formattedDuration,
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: (ref * 0.034).clamp(12.0, 18.0),
+                      ),
+                    ),
                   ),
-                ),
-                SizedBox(height: (ref * 0.008).clamp(2.0, 5.0)),
-                Text(
-                  workout.formattedDate,
-                  style: TextStyle(
-                    color: context.textMuted,
-                    fontSize: (ref * 0.028).clamp(10.0, 14.0),
+                  SizedBox(height: (ref * 0.008).clamp(2.0, 5.0)),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      workout.formattedDate,
+                      style: TextStyle(
+                        color: context.textMuted,
+                        fontSize: (ref * 0.028).clamp(10.0, 14.0),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             SizedBox(width: (ref * 0.02).clamp(4.0, 10.0)),
             Icon(
