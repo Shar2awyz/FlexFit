@@ -47,3 +47,5 @@ app.*.map.json
 # AI Assistant configs
 .claude/
 
+# Environment variables
+.env

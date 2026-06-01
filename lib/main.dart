@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'Pages/Components/app_route.dart';
 import 'Pages/ForgotPassword/view/ResetPasswordPage.dart';
 
@@ -27,9 +28,10 @@ Future<void> main() async {
   await Hive.openBox('settings');
   await Hive.openBox('seen_stories');
 
+  await dotenv.load(fileName: ".env");
   await Supabase.initialize(
-    url: 'https://noxgwtjrnjnbzmeqlncp.supabase.co',
-    anonKey: 'sb_publishable_ZAvTGBdF5WBo39Re9XKr_Q_Nt5xqmyX',
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
   runApp(

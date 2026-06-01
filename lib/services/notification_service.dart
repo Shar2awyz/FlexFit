@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:workmanager/workmanager.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -18,9 +19,10 @@ void callbackDispatcher() {
 
       // Initialize Supabase if not already done in this isolate
       try {
+        await dotenv.load(fileName: ".env");
         await Supabase.initialize(
-          url: 'https://noxgwtjrnjnbzmeqlncp.supabase.co',
-          anonKey: 'sb_publishable_ZAvTGBdF5WBo39Re9XKr_Q_Nt5xqmyX',
+          url: dotenv.env['SUPABASE_URL'] ?? '',
+          anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
         );
       } catch (e) {
         // Already initialized or fails silently
