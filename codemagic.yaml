@@ -36,8 +36,17 @@ workflows:
             --build-name=1.0.0 \
             --build-number=$BUILD_NUMBER
 
+      - name: Package unsigned IPA
+        script: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/Runner.app
+          zip -r FlexFit.ipa Payload
+          echo "IPA created at: $(pwd)/FlexFit.ipa"
+          ls -lh FlexFit.ipa
+
     artifacts:
-      - build/ios/iphoneos/Runner.app
+      - build/ios/iphoneos/FlexFit.ipa
       - flutter_drive.log
 
     cache:
