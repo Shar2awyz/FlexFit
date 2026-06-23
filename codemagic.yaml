@@ -1,0 +1,46 @@
+workflows:
+  ios-unsigned-build:
+    name: iOS Unsigned Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: 3.41.7
+      xcode: latest
+      cocoapods: default
+      groups:
+        - supabase_secrets   # Must be created in Codemagic UI with:
+                             #   SUPABASE_URL=<your real url>
+                             #   SUPABASE_ANON_KEY=<your real key>
+
+    scripts:
+      - name: Inject real secrets into .env
+        script: |
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          echo ".env written:"
+          cat .env | sed 's/=.*/=***/'   # log keys only, mask values
+
+      - name: Install pods
+        script: |
+          find . -name "Podfile.lock" -delete
+          cd ios && pod install --repo-update && cd ..
+
+      - name: Flutter pub get
+        script: flutter pub get
+
+      - name: Build iOS (unsigned)
+        script: |
+          flutter build ios \
+            --no-codesign \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER
+
+    artifacts:
+      - build/ios/iphoneos/Runner.app
+      - flutter_drive.log
+
+    cache:
+      cache_paths:
+        - $HOME/Library/Caches/CocoaPods
+        - $FLUTTER_ROOT/bin/cache
