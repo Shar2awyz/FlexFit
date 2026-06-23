@@ -48,4 +48,7 @@ app.*.map.json
 .claude/
 
 # Environment variables
-.env
+# .env is committed with PLACEHOLDER values only (no real secrets).
+# Real secrets are injected by Codemagic via environment variables
+# in a pre-build script that overwrites this file before flutter build runs.
+# See: https://docs.codemagic.io/variables/environment-variable-groups/
