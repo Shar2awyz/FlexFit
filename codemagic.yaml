@@ -21,13 +21,13 @@ workflows:
           echo ".env written:"
           cat .env | sed 's/=.*/=***/'   # log keys only, mask values
 
+      - name: Flutter pub get
+        script: flutter pub get
+
       - name: Install pods
         script: |
           find . -name "Podfile.lock" -delete
           cd ios && pod install --repo-update && cd ..
-
-      - name: Flutter pub get
-        script: flutter pub get
 
       - name: Build iOS (unsigned)
         script: |
@@ -39,6 +39,7 @@ workflows:
       - name: Package unsigned IPA
         script: |
           cd build/ios/iphoneos
+          rm -rf Payload
           mkdir -p Payload
           cp -r Runner.app Payload/Runner.app
           zip -r FlexFit.ipa Payload
