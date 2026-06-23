@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled6/Pages/Components/DashboardPageComponents/DashboardSummary.dart';
-import 'package:untitled6/Pages/Exercises.dart';
-import 'package:untitled6/Pages/Profile/view/ProfilePage.dart';
-import 'package:untitled6/Pages/Social/SocialNotificationService.dart';
-import 'package:untitled6/Pages/Social/view/SocialFeedPage.dart';
-import 'package:untitled6/Pages/StartWorkout/view/StartWorkoutPage.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Components/DashboardPageComponents/DashboardSummary.dart';
+import 'package:flex_fit/Pages/Exercises.dart';
+import 'package:flex_fit/Pages/Profile/view/ProfilePage.dart';
+import 'package:flex_fit/Pages/Social/SocialNotificationService.dart';
+import 'package:flex_fit/Pages/Social/view/SocialFeedPage.dart';
+import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 
 import '../../Components/CustomBottomNavBar.dart';
 import '../../Components/app_route.dart';

@@ -3,7 +3,7 @@
                  Premium Social Fitness & Workout Tracker
 ================================================================================
 
-Welcome to FlexFit (FlexLog), a state-of-the-art social fitness tracking application
+Welcome to Flex Fit, a state-of-the-art social fitness tracking application
 built using Flutter and Dart. Designed for lifters and fitness enthusiasts who want 
 the professional tracking capabilities of premium apps like Hevy or Strong, combined 
 with a rich, real-time social networking system for sharing progress, posts, and 

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled6/Pages/premadeworkout/Components/ExerciseTitle.dart';
+import 'package:flex_fit/Pages/premadeworkout/Components/ExerciseTitle.dart';
 
 class WorkoutDayCard extends StatelessWidget {
   final String day;

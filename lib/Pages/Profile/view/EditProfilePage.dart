@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled6/theme/app_colors.dart';
-import 'package:untitled6/services/settings_service.dart';
+import 'package:flex_fit/theme/app_colors.dart';
+import 'package:flex_fit/services/settings_service.dart';
 import '../viewmodel/ProfileViewModel.dart';
 
 class EditProfilePage extends StatefulWidget {

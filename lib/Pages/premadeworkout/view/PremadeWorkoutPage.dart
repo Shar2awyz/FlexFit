@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:untitled6/Pages/premadeworkout/Components/WorkoutDayCard.dart';
-import 'package:untitled6/Pages/premadeworkout/Components/headersection.dart';
+import 'package:flex_fit/Pages/premadeworkout/Components/WorkoutDayCard.dart';
+import 'package:flex_fit/Pages/premadeworkout/Components/headersection.dart';
 import '../PremadeWorkoutRepository.dart';
 import '../model/PremadeSplitModel.dart';
 import '../viewmodel/PremadeWorkoutViewModel.dart';

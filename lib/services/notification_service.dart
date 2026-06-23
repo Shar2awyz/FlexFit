@@ -71,9 +71,9 @@ void callbackDispatcher() {
           }
 
           const androidPlatformChannelSpecifics = AndroidNotificationDetails(
-            'flexlog_channel',
-            'FlexLog Notifications',
-            channelDescription: 'This channel is used for FlexLog notifications.',
+            'flex_fit_channel',
+            'Flex Fit Notifications',
+            channelDescription: 'This channel is used for Flex Fit notifications.',
             importance: Importance.max,
             priority: Priority.high,
           );
@@ -126,9 +126,9 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(const AndroidNotificationChannel(
-          'flexlog_channel',
-          'FlexLog Notifications',
-          description: 'This channel is used for FlexLog notifications.',
+          'flex_fit_channel',
+          'Flex Fit Notifications',
+          description: 'This channel is used for Flex Fit notifications.',
           importance: Importance.max,
         ));
 
@@ -145,9 +145,9 @@ class NotificationService {
     required String body,
   }) async {
     const androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'flexlog_channel',
-      'FlexLog Notifications',
-      channelDescription: 'This channel is used for FlexLog notifications.',
+      'flex_fit_channel',
+      'Flex Fit Notifications',
+      channelDescription: 'This channel is used for Flex Fit notifications.',
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -171,8 +171,8 @@ class NotificationService {
     
     // Set up periodic task running every 15 minutes (minimum allowed by OS)
     await Workmanager().registerPeriodicTask(
-      "flexlog_background_sync",
-      "flexlog_background_sync_task",
+      "flex_fit_background_sync",
+      "flex_fit_background_sync_task",
       frequency: const Duration(minutes: 15),
       constraints: Constraints(
         networkType: NetworkType.connected,

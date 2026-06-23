@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:untitled6/services/services.dart';
+import 'package:flex_fit/services/services.dart';
 import 'model/UserProfileModel.dart';
 import 'model/TrackedExerciseModel.dart';
 

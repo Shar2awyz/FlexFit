@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:untitled6/Pages/AddExercise/Components/FinalComponent.dart';
-import 'package:untitled6/Pages/Components/app_route.dart';
-import 'package:untitled6/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:flex_fit/Pages/AddExercise/Components/FinalComponent.dart';
+import 'package:flex_fit/Pages/Components/app_route.dart';
+import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
 import '../model/ExerciseListItem.dart';
 
 class FinishPage extends StatefulWidget {

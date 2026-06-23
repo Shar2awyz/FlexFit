@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../ViewModel/NotificationsViewModel.dart';
 import '../model/notification_model.dart';
-import 'package:untitled6/theme/app_colors.dart';
-import 'package:untitled6/Pages/Social/SocialRepository.dart';
+import 'package:flex_fit/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Social/SocialRepository.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 
 
 import '../../AddExercise/view/AddExercisePage.dart';

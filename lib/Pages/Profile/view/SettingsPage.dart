@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled6/services/settings_service.dart';
-import 'package:untitled6/theme/app_colors.dart';
-import 'package:untitled6/Pages/Components/app_route.dart';
-import 'package:untitled6/Pages/Login/View/LoginScreen.dart';
-import 'package:untitled6/services/services.dart';
+import 'package:flex_fit/services/settings_service.dart';
+import 'package:flex_fit/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Components/app_route.dart';
+import 'package:flex_fit/Pages/Login/View/LoginScreen.dart';
+import 'package:flex_fit/services/services.dart';
 import '../viewmodel/ProfileViewModel.dart';
 import 'EditProfilePage.dart';
 import 'ChangePasswordPage.dart';
 import 'AboutPage.dart';
-import 'package:untitled6/Pages/Social/view/SavedPostsPage.dart';
+import 'package:flex_fit/Pages/Social/view/SavedPostsPage.dart';
 
 class SettingsPage extends StatelessWidget {
   final String userid;
@@ -273,11 +273,11 @@ class SettingsPage extends StatelessWidget {
                   ),
                   Divider(color: context.divider, height: 1, indent: 16, endIndent: 16),
 
-                  // About FlexLog
+                  // About Flex Fit
                   _buildSettingTile(
                     context: context,
                     leading: _buildLeadingIcon(context, Icons.info_outline),
-                    title: 'About FlexLog',
+                    title: 'About Flex Fit',
                     subtitle: 'v4.2.0 • Pro Performance',
                     trailing: Icon(Icons.chevron_right_rounded, color: context.textMuted),
                     onTap: () {

@@ -106,7 +106,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 36),
 
-                      // Brand Text "FlexLog"
+                      // Brand Text "Flex Fit"
                       RichText(
                         text: const TextSpan(
                           style: TextStyle(
@@ -122,7 +122,7 @@ class SplashScreen extends StatelessWidget {
                               ),
                             ),
                             TextSpan(
-                              text: 'Log',
+                              text: 'Fit',
                               style: TextStyle(
                                 color: Color(0xFFC4B892), // Warm soft gold/tan
                               ),

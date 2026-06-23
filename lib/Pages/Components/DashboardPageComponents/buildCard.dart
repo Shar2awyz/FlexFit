@@ -1,6 +1,6 @@
 import 'dart:math' show min;
 import 'package:flutter/material.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 
 class buildCard extends StatelessWidget {
   final IconData icon;

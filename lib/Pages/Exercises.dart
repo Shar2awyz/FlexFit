@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 
-import 'package:untitled6/Pages/ExerciseDetails/view/ExerciseDetailsPage.dart';
-import 'package:untitled6/Pages/Exercises_Components/Exercises_Component.dart';
-import 'package:untitled6/Pages/StartWorkout/view/StartWorkoutPage.dart';
-import 'package:untitled6/Pages/Social/view/SocialFeedPage.dart';
+import 'package:flex_fit/Pages/ExerciseDetails/view/ExerciseDetailsPage.dart';
+import 'package:flex_fit/Pages/Exercises_Components/Exercises_Component.dart';
+import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:flex_fit/Pages/Social/view/SocialFeedPage.dart';
 
 import 'Components/CustomBottomNavBar.dart';
 import 'Components/app_route.dart';

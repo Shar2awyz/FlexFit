@@ -2,11 +2,11 @@ import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled6/Pages/Dashboard/model/workout_history_model.dart';
-import 'package:untitled6/theme/app_colors.dart';
-import 'package:untitled6/Pages/Notifications/ViewModel/NotificationsViewModel.dart';
-import 'package:untitled6/Pages/Notifications/view/NotificationsPage.dart';
-import 'package:untitled6/Pages/Components/app_route.dart';
+import 'package:flex_fit/Pages/Dashboard/model/workout_history_model.dart';
+import 'package:flex_fit/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Notifications/ViewModel/NotificationsViewModel.dart';
+import 'package:flex_fit/Pages/Notifications/view/NotificationsPage.dart';
+import 'package:flex_fit/Pages/Components/app_route.dart';
 
 import 'buildCard.dart';
 import 'workout_history_card.dart';

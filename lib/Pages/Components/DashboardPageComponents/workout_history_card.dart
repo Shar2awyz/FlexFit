@@ -1,9 +1,9 @@
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
-import 'package:untitled6/Pages/Dashboard/model/workout_history_model.dart';
-import 'package:untitled6/Pages/WorkoutDetail/view/workout_detail_page.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Dashboard/model/workout_history_model.dart';
+import 'package:flex_fit/Pages/WorkoutDetail/view/workout_detail_page.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 import '../app_route.dart';
 
 class WorkoutHistoryCard extends StatelessWidget {

@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../Repository/NotificationsRepository.dart';
 import '../model/notification_model.dart';
-import 'package:untitled6/services/notification_service.dart';
+import 'package:flex_fit/services/notification_service.dart';
 
 class NotificationsViewModel extends ChangeNotifier {
   final NotificationsRepository repository;

@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     size: screenWidth * 0.07),
                                 SizedBox(width: screenWidth * 0.02),
                                 Text(
-                                  "FlexLog",
+                                  "Flex Fit",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: screenWidth * 0.055,

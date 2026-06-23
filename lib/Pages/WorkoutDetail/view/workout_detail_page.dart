@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:untitled6/Pages/Dashboard/Repository.dart';
-import 'package:untitled6/Pages/Dashboard/model/workout_detail_model.dart';
-import 'package:untitled6/Pages/Dashboard/model/workout_history_model.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Dashboard/Repository.dart';
+import 'package:flex_fit/Pages/Dashboard/model/workout_detail_model.dart';
+import 'package:flex_fit/Pages/Dashboard/model/workout_history_model.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 import '../viewmodel/WorkoutDetailViewModel.dart';
 
 class WorkoutDetailPage extends StatefulWidget {

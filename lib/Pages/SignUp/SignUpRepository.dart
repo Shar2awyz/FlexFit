@@ -1,4 +1,4 @@
-import 'package:untitled6/services/services.dart';
+import 'package:flex_fit/services/services.dart';
 import 'model/SignUpRequest.dart';
 
 class SignUpRepository {

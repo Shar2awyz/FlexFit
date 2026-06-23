@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -18,7 +18,7 @@ class AboutPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'About FlexLog',
+          'About Flex Fit',
           style: TextStyle(
             color: context.textPrimary,
             fontSize: 20,
@@ -75,7 +75,7 @@ class AboutPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'FlexLog',
+              'Flex Fit',
               style: TextStyle(
                 color: context.textPrimary,
                 fontSize: 28,
@@ -115,7 +115,7 @@ class AboutPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'FlexLog is a premium, state-of-the-art workout tracking application designed for fitness enthusiasts who demand peak performance. Track your splits, schedule custom routines, log weights and sets, analyze personal records (PRs), and share your fitness journey with an integrated social feed.',
+                    'Flex Fit is a premium, state-of-the-art workout tracking application designed for fitness enthusiasts who demand peak performance. Track your splits, schedule custom routines, log weights and sets, analyze personal records (PRs), and share your fitness journey with an integrated social feed.',
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 14,
@@ -143,7 +143,7 @@ class AboutPage extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             Text(
-              '© 2026 FlexLog Team. All Rights Reserved.',
+              '© 2026 Flex Fit Team. All Rights Reserved.',
               style: TextStyle(
                 color: context.textMuted,
                 fontSize: 12,

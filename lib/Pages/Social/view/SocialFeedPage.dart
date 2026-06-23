@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:untitled6/Pages/Components/CustomBottomNavBar.dart';
-import 'package:untitled6/Pages/Components/app_route.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Components/CustomBottomNavBar.dart';
+import 'package:flex_fit/Pages/Components/app_route.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 
 import '../SocialRepository.dart';
 import '../model/story_model.dart';

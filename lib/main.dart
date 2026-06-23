@@ -8,9 +8,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'Pages/Components/app_route.dart';
 import 'Pages/ForgotPassword/view/ResetPasswordPage.dart';
 
-import 'package:untitled6/services/sharedpref.dart';
-import 'package:untitled6/services/settings_service.dart';
-import 'package:untitled6/services/notification_service.dart';
+import 'package:flex_fit/services/sharedpref.dart';
+import 'package:flex_fit/services/settings_service.dart';
+import 'package:flex_fit/services/notification_service.dart';
 
 import 'Pages/Dashboard/View/Dashboard.dart';
 import 'Pages/Login/View/LoginScreen.dart';

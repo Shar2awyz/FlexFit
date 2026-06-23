@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled6/Pages/Components/errorsnackbar.dart';
-import 'package:untitled6/Pages/Components/LogInComponents/buildTextField.dart';
-import 'package:untitled6/Pages/Components/LogInComponents/ContinueWithGoogle.dart';
+import 'package:flex_fit/Pages/Components/errorsnackbar.dart';
+import 'package:flex_fit/Pages/Components/LogInComponents/buildTextField.dart';
+import 'package:flex_fit/Pages/Components/LogInComponents/ContinueWithGoogle.dart';
 import '../SignUpRepository.dart';
 import '../viewmodel/SignUpViewModel.dart';
 import 'package:lottie/lottie.dart';

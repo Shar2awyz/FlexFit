@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:untitled6/Pages/Components/app_route.dart';
-import 'package:untitled6/theme/app_colors.dart';
+import 'package:flex_fit/Pages/Components/app_route.dart';
+import 'package:flex_fit/theme/app_colors.dart';
 
 import '../SocialRepository.dart';
 import '../model/friendship_model.dart';

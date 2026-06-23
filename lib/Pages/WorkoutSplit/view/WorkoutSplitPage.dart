@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled6/theme/app_colors.dart';
-import 'package:untitled6/Pages/AddExercise/view/AddExercisePage.dart';
-import 'package:untitled6/Pages/Components/CustomBottomNavBar.dart';
-import 'package:untitled6/Pages/Components/app_route.dart';
-import 'package:untitled6/Pages/Dashboard/View/Dashboard.dart';
-import 'package:untitled6/Pages/Exercises.dart';
-import 'package:untitled6/Pages/Profile/view/ProfilePage.dart';
-import 'package:untitled6/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:flex_fit/theme/app_colors.dart';
+import 'package:flex_fit/Pages/AddExercise/view/AddExercisePage.dart';
+import 'package:flex_fit/Pages/Components/CustomBottomNavBar.dart';
+import 'package:flex_fit/Pages/Components/app_route.dart';
+import 'package:flex_fit/Pages/Dashboard/View/Dashboard.dart';
+import 'package:flex_fit/Pages/Exercises.dart';
+import 'package:flex_fit/Pages/Profile/view/ProfilePage.dart';
+import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
 import '../WorkoutSplitRepository.dart';
 import '../viewmodel/WorkoutSplitViewModel.dart';
 

@@ -1,10 +1,10 @@
-# FlexLog (FlexFit) 🏋️‍♂️💪
+# Flex Fit 🏋️‍♂️💪
 
 [![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=flat&logo=Flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=flat&logo=dart&logoColor=white)](https://dart.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
 
-Welcome to **FlexLog** (formerly *FlexFit*), a state-of-the-art social fitness tracking application built using Flutter and Dart. Designed for lifters and fitness enthusiasts who want the professional logging capabilities of premium applications like Hevy or Strong, combined with a rich, real-time social networking system for sharing progress, posts, and stories.
+Welcome to **Flex Fit**, a state-of-the-art social fitness tracking application built using Flutter and Dart. Designed for lifters and fitness enthusiasts who want the professional logging capabilities of premium applications like Hevy or Strong, combined with a rich, real-time social networking system for sharing progress, posts, and stories.
 
 ---
 
@@ -27,8 +27,8 @@ Expanded social profiling to allow deeper user relationships.
 * **Friends List Page**: Tapping the friends count routes the user to a dedicated `FriendsListPage`.
 * **Interactive Search**: Users can search their list of friends in real-time or tap on a friend to inspect their workouts, personal records, and profile details. Includes quick navigation to discover and search new users globally.
 
-### 3. 📱 Brand Identity & Rename (`FlexLog`)
-* Changed the native application name on Android from `untitled6` to **`FlexLog`**.
+### 3. 📱 Brand Identity & Rename (`Flex Fit`)
+* Changed the native application name from `untitled6` to **`Flex Fit`**.
 * Updated native configuration files (`AndroidManifest.xml`, build configurations, asset bundles, and string mappings) to reflect the new premium brand.
 
 ### 4. 📐 Responsive Dashboard Refactoring (`LayoutBuilder`)
@@ -165,7 +165,7 @@ lib/
 1. Clone the repository and navigate to the project directory:
    ```bash
    git clone <repository_url>
-   cd FlexLog
+   cd flex_fit
    ```
 2. Retrieve packages:
    ```bash
