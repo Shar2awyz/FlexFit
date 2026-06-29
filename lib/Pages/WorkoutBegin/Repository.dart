@@ -20,6 +20,7 @@ class WorkoutBeginRepository {
         .from('split_exercises')
         .select('''
           exercise_id,
+          order_index,
           sets_count,
           exercises (
             id,
@@ -29,7 +30,7 @@ class WorkoutBeginRepository {
           )
         ''')
         .eq('split_day_id', dayId)
-        .order('order_index');
+        .order('order_index', ascending: true);
     return data;
   }
 
@@ -108,6 +109,40 @@ class WorkoutBeginRepository {
     }
   }
 
+  Future<double?> getPreviousMaxWeight({
+    required String exerciseId,
+    required String userId,
+    required String excludeWorkoutId,
+  }) async {
+    try {
+      final we = await supabase
+          .from('workout_exercises')
+          .select('id, workout_id, workouts!inner(user_id)')
+          .eq('exercise_id', exerciseId)
+          .eq('workouts.user_id', userId);
+
+      if ((we as List).isEmpty) return null;
+      final ids = we
+          .where((w) => w['workout_id'] != excludeWorkoutId)
+          .map((e) => e['id'] as String)
+          .toList();
+
+      if (ids.isEmpty) return null;
+
+      final sets = await supabase
+          .from('sets')
+          .select('weight')
+          .inFilter('workout_exercise_id', ids);
+
+      if ((sets as List).isEmpty) return null;
+      return sets
+          .map((s) => (s['weight'] as num).toDouble())
+          .reduce((a, b) => a > b ? a : b);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Returns the UUID of the newly inserted set row.
   Future<String?> insertSet(Map<String, dynamic> data) async {
     final res = await supabase
@@ -151,7 +186,10 @@ class WorkoutBeginRepository {
   }) async {
     await supabase
         .from('workouts')
-        .update({'duration_seconds': durationSeconds})
+        .update({
+          'duration_seconds': durationSeconds,
+          'is_completed': true,
+        })
         .eq('id', workoutId);
   }
 

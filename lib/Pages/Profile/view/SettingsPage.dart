@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flex_fit/services/settings_service.dart';
 import 'package:flex_fit/theme/app_colors.dart';
 import 'package:flex_fit/Pages/Components/app_route.dart';
@@ -75,12 +76,13 @@ class SettingsPage extends StatelessWidget {
                     backgroundColor: Colors.white24,
                     child: ClipOval(
                       child: photoUrl != null && photoUrl.isNotEmpty
-                          ? Image.network(
-                              photoUrl,
+                          ? CachedNetworkImage(
+                              imageUrl: photoUrl,
                               width: sw * 0.26,
                               height: sw * 0.26,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => Icon(Icons.person, size: sw * 0.13, color: Colors.white),
+                              placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                              errorWidget: (_, _, _) => Icon(Icons.person, size: sw * 0.13, color: Colors.white),
                             )
                           : Icon(Icons.person, size: sw * 0.13, color: Colors.white),
                     ),

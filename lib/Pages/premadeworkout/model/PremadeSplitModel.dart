@@ -48,7 +48,8 @@ class PremadeSplitModel {
           name: ex['name'] as String? ?? '',
           orderIndex: e['order_index'] as int? ?? 0,
         );
-      }).toList();
+      }).toList()
+        ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
       return PremadeDayModel(
         id: d['id'] as String,
         name: d['name'] as String? ?? '',

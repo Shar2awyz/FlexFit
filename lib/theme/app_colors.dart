@@ -3,72 +3,91 @@ import 'package:flutter/material.dart';
 extension AppColors on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
 
-  // ── page / scaffold ──────────────────────────────────────────────────────
+  // ── page / scaffold ───────────────────────────────────────────────
   Color get pageBg =>
-      isDark ? const Color(0xFF1E3A8A) : const Color(0xFFF0F5FF);
+      isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+
   Color get deepBg =>
-      isDark ? const Color(0xFF0A1F44) : const Color(0xFFE4EEFF);
+      isDark ? const Color(0xFF020617) : const Color(0xFFE2E8F0);
+
   Color get workoutBg =>
-      isDark ? const Color(0xFF0D1B3E) : const Color(0xFFF5F8FF);
+      isDark ? const Color(0xFF111827) : const Color(0xFFF1F5F9);
 
-  // ── cards / surfaces ────────────────────────────────────────────────────
-  Color get cardBg => isDark ? const Color(0xFF2E4C8C) : Colors.white;
+  // ── cards / surfaces ──────────────────────────────────────────────
+  Color get cardBg =>
+      isDark ? const Color(0xFF1E293B) : Colors.white;
+
   Color get cardAlt =>
-      isDark ? const Color(0xFF3F5E8F) : const Color(0xFFEEF4FF);
+      isDark ? const Color(0xFF273449) : const Color(0xFFF8FAFC);
+
   Color get innerCard =>
-      isDark ? const Color(0xFF1A2E5C) : const Color(0xFFF0F5FF);
+      isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
   Color get rowBg =>
-      isDark ? const Color(0xFF243B72) : const Color(0xFFE8EFFF);
+      isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
+
   Color get navBg =>
-      isDark ? const Color(0xFF0A1F44) : Colors.white;
+      isDark ? const Color(0xFF020617) : Colors.white;
 
-  // ── text ────────────────────────────────────────────────────────────────
+  // ── text ──────────────────────────────────────────────────────────
   Color get textPrimary =>
-      isDark ? Colors.white : const Color(0xFF0F1F44);
-  Color get textSecondary =>
-      isDark ? const Color(0xFFB3C5E0) : const Color(0xFF3D5A8A);
-  Color get textMuted =>
-      isDark ? Colors.white38 : const Color(0xFF7A9CC3);
-  Color get textHint =>
-      isDark ? Colors.white24 : const Color(0xFFADC3DA);
+      isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
 
-  // ── accent ──────────────────────────────────────────────────────────────
+  Color get textSecondary =>
+      isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+
+  Color get textMuted =>
+      isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
+  Color get textHint =>
+      isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+
+  // ── accent ────────────────────────────────────────────────────────
   Color get accent => const Color(0xFF3B82F6);
+
   Color get accentLight =>
       isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB);
+
   Color get accentBg =>
       isDark
           ? const Color(0xFF3B82F6).withValues(alpha: 0.15)
-          : const Color(0xFF3B82F6).withValues(alpha: 0.1);
+          : const Color(0xFFDBEAFE);
 
-  // ── misc ────────────────────────────────────────────────────────────────
+  // ── status colors ─────────────────────────────────────────────────
+  Color get success => const Color(0xFF22C55E);
+
+  Color get warning => const Color(0xFFF59E0B);
+
+  Color get danger => const Color(0xFFEF4444);
+
+  // ── misc ──────────────────────────────────────────────────────────
   Color get divider =>
-      isDark ? Colors.white12 : const Color(0xFFDDE6F5);
+      isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
   Color get iconBg =>
-      isDark ? Colors.white10 : const Color(0xFFDEE8FF);
+      isDark ? const Color(0xFF243244) : const Color(0xFFEFF6FF);
+
   Color get border =>
-      isDark
-          ? Colors.white.withValues(alpha: 0.06)
-          : const Color(0xFFCDD9F0);
+      isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
-  // ── AppBar ──────────────────────────────────────────────────────────────
+  // ── AppBar ────────────────────────────────────────────────────────
   Color get appBarBg =>
-      isDark ? const Color(0xFF1E3A8A) : const Color(0xFF1D4ED8);
+      isDark ? const Color(0xFF0F172A) : Colors.white;
 
-  // ── icon colors on surfaces ─────────────────────────────────────────────
+  // ── icons ─────────────────────────────────────────────────────────
   Color get iconColor =>
-      isDark ? Colors.white : const Color(0xFF0F1F44);
-  Color get iconMuted =>
-      isDark ? Colors.white38 : const Color(0xFF7A9CC3);
+      isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
 
-  // ── shadow ──────────────────────────────────────────────────────────────
+  Color get iconMuted =>
+      isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
+  // ── shadows ───────────────────────────────────────────────────────
   List<BoxShadow> get cardShadow => [
         BoxShadow(
-          color: isDark
-              ? Colors.black.withValues(alpha: 0.2)
-              : const Color(0xFF3B82F6).withValues(alpha: 0.08),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
+          color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+          blurRadius: 20,
+          spreadRadius: 0,
+          offset: const Offset(0, 8),
         ),
       ];
 }

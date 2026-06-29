@@ -20,6 +20,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _weightController;
   
   String? _selectedGender;
+  int? _restDaysPerWeek;
   bool _isKg = true;
   bool _isSaving = false;
 
@@ -41,6 +42,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       text: displayWeight > 0 ? displayWeight.toStringAsFixed(1) : '',
     );
     _selectedGender = user?.gender;
+    _restDaysPerWeek = user?.restDaysPerWeek ?? 4;
   }
 
   @override
@@ -71,6 +73,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         email: _emailController.text.trim(),
         weightKg: weightKg,
         gender: _selectedGender,
+        restDaysPerWeek: _restDaysPerWeek,
       );
       messenger.showSnackBar(
         const SnackBar(
@@ -274,6 +277,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ],
                       onChanged: (val) {
                         setState(() => _selectedGender = val);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      initialValue: _restDaysPerWeek,
+                      decoration: InputDecoration(
+                        labelText: 'Rest Days per Week',
+                        labelStyle: TextStyle(color: context.textSecondary),
+                        prefixIcon: Icon(Icons.calendar_month_rounded, color: context.accentLight),
+                        filled: true,
+                        fillColor: context.innerCard,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: context.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: context.accent, width: 1.5),
+                        ),
+                      ),
+                      dropdownColor: context.cardBg,
+                      style: TextStyle(color: context.textPrimary),
+                      items: List.generate(8, (i) => DropdownMenuItem(
+                        value: i,
+                        child: Text('$i ${i == 1 ? "day" : "days"}'),
+                      )),
+                      onChanged: (val) {
+                        setState(() => _restDaysPerWeek = val);
                       },
                     ),
                   ],

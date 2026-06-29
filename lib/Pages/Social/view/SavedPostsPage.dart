@@ -6,7 +6,7 @@ import 'package:flex_fit/theme/app_colors.dart';
 import '../SocialRepository.dart';
 import '../viewmodel/saved_posts_cubit.dart';
 import '../viewmodel/saved_posts_state.dart';
-import '../widgets/post_card.dart';
+import '../widgets/feed_card.dart';
 import 'CommentsPage.dart';
 import 'FriendProfilePage.dart';
 
@@ -153,7 +153,7 @@ class _SavedPostsViewState extends State<SavedPostsView> {
                   final post = state.posts[i];
                   final cubit = context.read<SavedPostsCubit>();
 
-                  return PostCard(
+                  return FeedCard(
                     post: post,
                     currentUserId: widget.currentUserId,
                     onLike: () => cubit.toggleLike(post),

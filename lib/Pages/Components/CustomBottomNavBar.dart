@@ -56,40 +56,80 @@ class CustomBottomNavBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular((ref * 0.06).clamp(16.0, 32.0)),
                     boxShadow: context.cardShadow,
                   ),
-                  child: BottomNavigationBar(
-                    currentIndex: currentIndex,
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    selectedItemColor: context.accentLight,
-                    unselectedItemColor: context.textMuted,
-                    type: BottomNavigationBarType.fixed,
-                    selectedFontSize: (ref * 0.028).clamp(8.0, 14.0),
-                    unselectedFontSize: (ref * 0.026).clamp(8.0, 13.0),
-                    iconSize: (ref * 0.062).clamp(18.0, 32.0),
-                    onTap: onTap,
-                    items: [
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.grid_view_rounded),
-                        label: 'Dashboard',
-                      ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.play_circle_outline_rounded),
-                        label: 'Workout',
-                      ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.fitness_center_rounded),
-                        label: 'Exercises',
-                      ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.person_rounded),
-                        label: 'Profile',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: _badgedIcon(Icons.people_alt_rounded, showSocialBadge),
-                        activeIcon: _badgedIcon(Icons.people_alt_rounded, showSocialBadge),
-                        label: 'Social',
-                      ),
-                    ],
+                  child: LayoutBuilder(
+                    builder: (context, barConstraints) {
+                      final barWidth = barConstraints.maxWidth;
+                      const numItems = 5;
+                      final itemWidth = barWidth / numItems;
+                      
+                      // Calculate bubble width and offset with responsive horizontal spacing
+                      final pillWidth = itemWidth - 10.0;
+                      final leftOffset = currentIndex * itemWidth + 5.0;
+
+                      return Stack(
+                        alignment: Alignment.centerLeft,
+                        children: [
+                          AnimatedPositioned(
+                            duration: const Duration(milliseconds: 320),
+                            curve: Curves.easeInOutCubic,
+                            left: leftOffset,
+                            top: 0,
+                            bottom: 0,
+                            width: pillWidth,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: context.accentBg,
+                                borderRadius: BorderRadius.circular((ref * 0.04).clamp(12.0, 20.0)),
+                                border: Border.all(
+                                  color: context.accent.withValues(alpha: 0.15),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _NavBarItem(
+                                icon: Icons.grid_view_rounded,
+                                label: 'Dashboard',
+                                isSelected: currentIndex == 0,
+                                onTap: () => onTap(0),
+                                ref: ref,
+                              ),
+                              _NavBarItem(
+                                icon: Icons.play_circle_outline_rounded,
+                                label: 'Workout',
+                                isSelected: currentIndex == 1,
+                                onTap: () => onTap(1),
+                                ref: ref,
+                              ),
+                              _NavBarItem(
+                                icon: Icons.fitness_center_rounded,
+                                label: 'Exercises',
+                                isSelected: currentIndex == 2,
+                                onTap: () => onTap(2),
+                                ref: ref,
+                              ),
+                              _NavBarItem(
+                                icon: Icons.people_alt_rounded,
+                                label: 'Social',
+                                isSelected: currentIndex == 3,
+                                onTap: () => onTap(3),
+                                ref: ref,
+                                showBadge: showSocialBadge,
+                              ),
+                              _NavBarItem(
+                                icon: Icons.person_rounded,
+                                label: 'Profile',
+                                isSelected: currentIndex == 4,
+                                onTap: () => onTap(4),
+                                ref: ref,
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
@@ -99,27 +139,99 @@ class CustomBottomNavBar extends StatelessWidget {
       },
     );
   }
+}
 
-  static Widget _badgedIcon(IconData icon, bool showBadge) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Icon(icon),
-        if (showBadge)
-          Positioned(
-            top: -3,
-            right: -5,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.orange,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
-              ),
+class _NavBarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final double ref;
+  final bool showBadge;
+
+  const _NavBarItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.ref,
+    this.showBadge = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = context.accentLight;
+    final inactiveColor = context.textMuted;
+    final color = isSelected ? activeColor : inactiveColor;
+
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: (ref * 0.01).clamp(2.0, 6.0)),
+          child: AnimatedScale(
+            scale: isSelected ? 1.06 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutBack,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    TweenAnimationBuilder<Color?>(
+                      duration: const Duration(milliseconds: 300),
+                      tween: ColorTween(end: color),
+                      builder: (context, animatedColor, child) {
+                        return Icon(
+                          icon,
+                          color: animatedColor,
+                          size: (ref * 0.062).clamp(18.0, 32.0),
+                        );
+                      },
+                    ),
+                    if (showBadge)
+                      Positioned(
+                        top: -2,
+                        right: -4,
+                        child: Container(
+                          width: 9,
+                          height: 9,
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: context.navBg,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 300),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: isSelected
+                        ? (ref * 0.028).clamp(8.0, 14.0)
+                        : (ref * 0.026).clamp(8.0, 13.0),
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 }
@@ -212,7 +324,7 @@ class _ActiveWorkoutMiniPlayerState extends State<_ActiveWorkoutMiniPlayer> {
         ),
         padding: EdgeInsets.symmetric(
           horizontal: (ref * 0.04).clamp(12.0, 16.0),
-          vertical: (ref * 0.035).clamp(10.0, 14.0),
+          vertical: (ref * 0.020).clamp(10.0, 14.0),
         ),
         decoration: BoxDecoration(
           gradient: LinearGradient(

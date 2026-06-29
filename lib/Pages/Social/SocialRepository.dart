@@ -14,7 +14,7 @@ class SocialRepository {
   final _supabase = Supabase.instance.client;
 
   static const _postSelect =
-      '*, Users(id, username, image_url), post_likes(count), post_comments(count), post_reposts(count)';
+      '*, Users(id, username, image_url), post_likes(count), post_comments(count), post_reposts(count), workouts(*, workout_exercises(id, order_index, exercises(name, muscle_group), sets(reps, weight, set_number)))';
 
   // ── Feed ──────────────────────────────────────────────────────────────────
 

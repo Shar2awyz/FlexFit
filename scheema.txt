@@ -1,78 +1,227 @@
--- Create the notifications table
-CREATE TABLE public.notifications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES public."Users"(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  message TEXT NOT NULL,
-  type TEXT NOT NULL, -- e.g., 'workout_reminder', 'streak_3', 'streak_7', 'friend_request_received', etc.
-  is_read BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.Users (
+  id uuid NOT NULL DEFAULT auth.uid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  fullname text,
+  age bigint,
+  Gender text DEFAULT '''male'''::text,
+  username text NOT NULL UNIQUE,
+  phone_number numeric UNIQUE,
+  email text UNIQUE,
+  image_url text,
+  weight(kg) integer DEFAULT 0,
+  preferred_weight_unit text DEFAULT 'kg'::text,
+  fcm_token text,
+  rest_days_per_week integer DEFAULT 4,
+  CONSTRAINT Users_pkey PRIMARY KEY (id),
+  CONSTRAINT Users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
-
--- Enable RLS (Row Level Security) if your other tables have it enabled
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
-
--- Allow users to read, update, and delete only their own notifications
-CREATE POLICY "Users can view their own notifications"
-  ON public.notifications FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own notifications"
-  ON public.notifications FOR UPDATE
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own notifications"
-  ON public.notifications FOR DELETE
-  USING (auth.uid() = user_id);
-
--- Allow inserts (so backend or app-side simulation can write notifications)
-CREATE POLICY "Anyone can insert notifications"
-  ON public.notifications FOR INSERT
-  WITH CHECK (true);
-
--- Add table to realtime publication
-ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
-
--- ── FRIENDSHIP AUTOMATED NOTIFICATIONS TRIGGER ─────────────────────────────────
-
--- Function to handle friend request notifications automatically on the database
-CREATE OR REPLACE FUNCTION public.handle_friendship_notification()
-RETURNS TRIGGER AS $$
-DECLARE
-  sender_username TEXT;
-BEGIN
-  IF TG_OP = 'INSERT' AND NEW.status = 'pending' THEN
-    -- Fetch username of the sender (requester)
-    SELECT username INTO sender_username FROM public."Users" WHERE id = NEW.requester_id;
-    
-    INSERT INTO public.notifications (user_id, title, message, type, is_read)
-    VALUES (
-      NEW.addressee_id,
-      'Friend Request Received',
-      COALESCE(sender_username, 'Someone') || ' sent you a friend request.',
-      'friend_request_received',
-      FALSE
-    );
-  ELSIF TG_OP = 'UPDATE' AND NEW.status = 'accepted' AND OLD.status = 'pending' THEN
-    -- Fetch username of the person who accepted (addressee)
-    SELECT username INTO sender_username FROM public."Users" WHERE id = NEW.addressee_id;
-    
-    INSERT INTO public.notifications (user_id, title, message, type, is_read)
-    VALUES (
-      NEW.requester_id,
-      'Friend Request Accepted',
-      COALESCE(sender_username, 'Someone') || ' accepted your friend request.',
-      'friend_request_accepted',
-      FALSE
-    );
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger to execute the function on public.friendships
-CREATE OR REPLACE TRIGGER on_friendship_change
-  AFTER INSERT OR UPDATE ON public.friendships
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_friendship_notification();
-
+CREATE TABLE public.exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text,
+  muscle_group text,
+  equipment text,
+  photo_url text,
+  video_url text DEFAULT 'https://www.youtube.com/shorts/WbCEvFA0NJs'::text,
+  CONSTRAINT exercises_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.workouts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  name text,
+  date timestamp without time zone DEFAULT now(),
+  notes text,
+  duration_seconds bigint DEFAULT '0'::bigint,
+  visibility text DEFAULT 'friends'::text,
+  is_completed boolean DEFAULT false,
+  progress_summary jsonb,
+  CONSTRAINT workouts_pkey PRIMARY KEY (id),
+  CONSTRAINT workouts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.workout_exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  workout_id uuid,
+  exercise_id uuid,
+  order_index integer,
+  CONSTRAINT workout_exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_exercises_workout_id_fkey FOREIGN KEY (workout_id) REFERENCES public.workouts(id),
+  CONSTRAINT workout_exercises_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
+);
+CREATE TABLE public.sets (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  workout_exercise_id uuid,
+  reps integer,
+  weight double precision,
+  set_number integer,
+  CONSTRAINT sets_pkey PRIMARY KEY (id),
+  CONSTRAINT sets_workout_exercise_id_fkey FOREIGN KEY (workout_exercise_id) REFERENCES public.workout_exercises(id)
+);
+CREATE TABLE public.workout_splits (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  name text,
+  created_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT workout_splits_pkey PRIMARY KEY (id),
+  CONSTRAINT workout_splits_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.split_days (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  split_id uuid,
+  name text,
+  day_order integer,
+  CONSTRAINT split_days_pkey PRIMARY KEY (id),
+  CONSTRAINT split_days_split_id_fkey FOREIGN KEY (split_id) REFERENCES public.workout_splits(id)
+);
+CREATE TABLE public.split_exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  split_day_id uuid,
+  exercise_id uuid,
+  order_index integer,
+  sets_count integer NOT NULL DEFAULT 3,
+  CONSTRAINT split_exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT split_exercises_exercise_id_fkey FOREIGN KEY (exercise_id) REFERENCES public.exercises(id),
+  CONSTRAINT split_exercises_split_day_id_fkey FOREIGN KEY (split_day_id) REFERENCES public.split_days(id)
+);
+CREATE TABLE public.premade_splits (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text,
+  photo_url text,
+  description text,
+  CONSTRAINT premade_splits_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.premade_split_days (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  split_id uuid,
+  name text,
+  day_order integer,
+  CONSTRAINT premade_split_days_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_split FOREIGN KEY (split_id) REFERENCES public.premade_splits(id)
+);
+CREATE TABLE public.premade_split_exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  split_day_id uuid,
+  exercise_id uuid,
+  order_index integer,
+  CONSTRAINT premade_split_exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT premade_split_exercises_split_day_id_fkey FOREIGN KEY (split_day_id) REFERENCES public.premade_split_days(id),
+  CONSTRAINT fk_premade_exercise FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
+);
+CREATE TABLE public.tracked_exercises (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  exercise_id uuid NOT NULL,
+  goal_weight bigint DEFAULT '0'::bigint,
+  CONSTRAINT tracked_exercises_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_tracked_exercise FOREIGN KEY (exercise_id) REFERENCES public.exercises(id)
+);
+CREATE TABLE public.friendships (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  requester_id uuid NOT NULL,
+  addressee_id uuid NOT NULL,
+  status text NOT NULL DEFAULT 'pending'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT friendships_pkey PRIMARY KEY (id),
+  CONSTRAINT friendships_requester_id_fkey FOREIGN KEY (requester_id) REFERENCES public.Users(id),
+  CONSTRAINT friendships_addressee_id_fkey FOREIGN KEY (addressee_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.posts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  caption text,
+  image_url text,
+  created_at timestamp with time zone DEFAULT now(),
+  type text NOT NULL DEFAULT 'post'::text,
+  workout_id uuid,
+  CONSTRAINT posts_pkey PRIMARY KEY (id),
+  CONSTRAINT posts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id),
+  CONSTRAINT posts_workout_id_fkey FOREIGN KEY (workout_id) REFERENCES public.workouts(id)
+);
+CREATE TABLE public.post_likes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  post_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT post_likes_pkey PRIMARY KEY (id),
+  CONSTRAINT post_likes_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id),
+  CONSTRAINT post_likes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.post_comments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  post_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  comment text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT post_comments_pkey PRIMARY KEY (id),
+  CONSTRAINT post_comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id),
+  CONSTRAINT post_comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.saved_posts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  post_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT saved_posts_pkey PRIMARY KEY (id),
+  CONSTRAINT saved_posts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id),
+  CONSTRAINT saved_posts_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id)
+);
+CREATE TABLE public.stories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  image_url text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  expires_at timestamp with time zone NOT NULL,
+  CONSTRAINT stories_pkey PRIMARY KEY (id),
+  CONSTRAINT stories_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.post_reposts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  post_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT post_reposts_pkey PRIMARY KEY (id),
+  CONSTRAINT post_reposts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id),
+  CONSTRAINT post_reposts_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id)
+);
+CREATE TABLE public.story_views (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  story_id uuid,
+  viewer_id uuid,
+  viewed_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT story_views_pkey PRIMARY KEY (id),
+  CONSTRAINT story_views_story_id_fkey FOREIGN KEY (story_id) REFERENCES public.stories(id),
+  CONSTRAINT story_views_viewer_id_fkey FOREIGN KEY (viewer_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.story_likes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  story_id uuid,
+  user_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT story_likes_pkey PRIMARY KEY (id),
+  CONSTRAINT story_likes_story_id_fkey FOREIGN KEY (story_id) REFERENCES public.stories(id),
+  CONSTRAINT story_likes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.notification_settings (
+  user_id uuid NOT NULL,
+  notifications_enabled boolean DEFAULT true,
+  workout_reminders boolean DEFAULT true,
+  streak_notifications boolean DEFAULT true,
+  friend_notifications boolean DEFAULT true,
+  reminder_time time without time zone DEFAULT '18:00:00'::time without time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT notification_settings_pkey PRIMARY KEY (user_id),
+  CONSTRAINT notification_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  message text NOT NULL,
+  type text NOT NULL,
+  is_read boolean DEFAULT false,
+  metadata jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.Users(id)
+);

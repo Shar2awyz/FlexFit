@@ -24,6 +24,14 @@ class SplitSummaryModel {
       dayCount: dayCount,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'split_days': List.generate(dayCount, (_) => {}),
+    };
+  }
 }
 
 class PremadeSplitSummary {
@@ -43,5 +51,13 @@ class PremadeSplitSummary {
       name: json['name'] as String? ?? '',
       photoUrl: json['photo_url'] as String?,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'photo_url': photoUrl,
+    };
   }
 }

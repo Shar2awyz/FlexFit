@@ -49,6 +49,183 @@ class _AddExerciseViewState extends State<_AddExerciseView> {
     super.dispose();
   }
 
+  int _getCategoryIndex(String muscle) {
+    return _categories.indexWhere((c) => c.toLowerCase() == muscle.toLowerCase());
+  }
+
+  Widget _buildFilterButton(BuildContext context, AddExerciseViewModel vm) {
+    final hasActiveFilters = vm.selectedMuscle != 'All' || vm.selectedEquipment != 'All';
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        GestureDetector(
+          onTap: () => _showFilterBottomSheet(context, vm),
+          child: Container(
+            height: 45,
+            width: 45,
+            decoration: BoxDecoration(
+              color: context.cardBg,
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: context.border, width: 1),
+            ),
+            child: Icon(
+              Icons.tune_rounded,
+              color: hasActiveFilters ? context.accentLight : context.textPrimary,
+              size: 20,
+            ),
+          ),
+        ),
+        if (hasActiveFilters)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
+                color: Colors.redAccent,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showFilterBottomSheet(BuildContext context, AddExerciseViewModel vm) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.pageBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final muscles = vm.availableMuscles;
+            final equipments = vm.availableEquipments;
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Filter Exercises',
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            vm.clearFilters();
+                            setModalState(() {});
+                          },
+                          child: Text(
+                            'Clear All',
+                            style: TextStyle(color: context.accentLight),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    Text(
+                      'Muscle Group',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: muscles.length,
+                        itemBuilder: (context, idx) {
+                          final muscle = muscles[idx];
+                          final isSelected = vm.selectedMuscle.toLowerCase() == muscle.toLowerCase();
+                          return CategoryChip(
+                            label: muscle,
+                            selected: isSelected,
+                            onTap: () {
+                              vm.filterByCategory(muscle, _getCategoryIndex(muscle));
+                              setModalState(() {});
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Equipment',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: equipments.length,
+                        itemBuilder: (context, idx) {
+                          final equipment = equipments[idx];
+                          final isSelected = vm.selectedEquipment.toLowerCase() == equipment.toLowerCase();
+                          return CategoryChip(
+                            label: equipment,
+                            selected: isSelected,
+                            onTap: () {
+                              vm.filterByEquipment(equipment);
+                              setModalState(() {});
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.accentLight,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          'Apply Filters',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<AddExerciseViewModel>();
@@ -67,6 +244,7 @@ class _AddExerciseViewState extends State<_AddExerciseView> {
                             'id': e.id,
                             'name': e.name,
                             'muscle_group': e.muscleGroup,
+                            'equipment': e.equipment,
                             'photo_url': e.photoUrl ?? '',
                           })
                       .toList();
@@ -85,9 +263,17 @@ class _AddExerciseViewState extends State<_AddExerciseView> {
             const SizedBox(height: 15),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: CustomSearchBar(
-                controller: _searchController,
-                onChanged: vm.filterBySearch,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomSearchBar(
+                      controller: _searchController,
+                      onChanged: vm.filterBySearch,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildFilterButton(context, vm),
+                ],
               ),
             ),
             const SizedBox(height: 10),
@@ -124,7 +310,9 @@ class _AddExerciseViewState extends State<_AddExerciseView> {
                               final e = vm.filteredExercises[index];
                               return ExerciseItem(
                                 title: e.name,
-                                subtitle: e.muscleGroup,
+                                subtitle: e.equipment.isNotEmpty
+                                    ? '${e.muscleGroup} • ${e.equipment}'
+                                    : e.muscleGroup,
                                 image: e.photoUrl ?? '',
                                 isSelected: vm.isSelected(e.id),
                                 onAdd: () => vm.toggleExercise(e),

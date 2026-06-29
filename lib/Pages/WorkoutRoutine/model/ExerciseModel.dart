@@ -1,6 +1,5 @@
 import 'SetModel.dart';
 
-import 'SetModel.dart';
 
 class ExerciseModel {
   final String id;
@@ -19,10 +18,21 @@ class ExerciseModel {
 
   factory ExerciseModel.fromJson(Map<String, dynamic> json) {
     return ExerciseModel(
-      id: json['id'],
-      name: json['name'],
-      muscleGroup: json['muscle_group'],
-
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      muscleGroup: json['muscle_group'] as String? ?? '',
+      sets: (json['sets'] as List?)
+          ?.map((e) => SetModel.fromJson(Map<String, dynamic>.from(e)))
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'muscle_group': muscleGroup,
+      'sets': sets?.map((e) => e.toJson()).toList(),
+    };
   }
 }

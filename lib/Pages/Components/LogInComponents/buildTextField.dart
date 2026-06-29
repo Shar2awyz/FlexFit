@@ -1,12 +1,18 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class buildTextField extends StatelessWidget{
-TextEditingController controller;
-String hint;
-IconData icon;
-bool? obscure;
-   buildTextField({super.key,required this.controller,  this.obscure ,required this.hint,required this.icon});
+class buildTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final IconData icon;
+  final bool? obscure;
+
+  const buildTextField({
+    super.key,
+    required this.controller,
+    this.obscure,
+    required this.hint,
+    required this.icon,
+  });
   @override
   Widget build(BuildContext context) {
 

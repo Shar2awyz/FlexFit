@@ -34,6 +34,11 @@ class ExerciseDetail {
       sets: sets,
     );
   }
+
+  double get maxWeight {
+    if (sets.isEmpty) return 0.0;
+    return sets.map((s) => s.weight).reduce((a, b) => a > b ? a : b);
+  }
 }
 
 class WorkoutSessionDetail {
@@ -42,6 +47,8 @@ class WorkoutSessionDetail {
   final DateTime date;
   final int durationSeconds;
   final List<ExerciseDetail> exercises;
+  final Map<String, dynamic>? progressSummary;
+  final String? notes;
 
   WorkoutSessionDetail({
     required this.id,
@@ -49,19 +56,42 @@ class WorkoutSessionDetail {
     required this.date,
     required this.durationSeconds,
     required this.exercises,
+    this.progressSummary,
+    this.notes,
   });
 
   factory WorkoutSessionDetail.fromMap(Map<String, dynamic> map) {
-    final rawExercises = (map['workout_exercises'] as List?) ?? [];
+    final rawExercises = List<Map<String, dynamic>>.from(map['workout_exercises'] as List? ?? []);
+    rawExercises.sort((a, b) {
+      final aOrd = a['order_index'] as int? ?? 0;
+      final bOrd = b['order_index'] as int? ?? 0;
+      return aOrd.compareTo(bOrd);
+    });
     return WorkoutSessionDetail(
       id: map['id'] as String,
       name: map['name'] as String? ?? 'Workout',
       date: DateTime.parse(map['date'] as String),
       durationSeconds: (map['duration_seconds'] as num?)?.toInt() ?? 0,
       exercises: rawExercises
-          .map((e) => ExerciseDetail.fromMap(e as Map<String, dynamic>))
+          .map((e) => ExerciseDetail.fromMap(e))
           .toList(),
+      progressSummary: map['progress_summary'] as Map<String, dynamic>?,
+      notes: map['notes'] as String?,
     );
+  }
+
+  double get totalVolume {
+    double volume = 0.0;
+    for (final ex in exercises) {
+      for (final set in ex.sets) {
+        volume += set.reps * set.weight;
+      }
+    }
+    return volume;
+  }
+
+  int get totalSetsCount {
+    return exercises.fold(0, (sum, ex) => sum + ex.sets.length);
   }
 
   String get formattedDuration {

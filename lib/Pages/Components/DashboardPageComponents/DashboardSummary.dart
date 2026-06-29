@@ -2,6 +2,7 @@ import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flex_fit/Pages/Dashboard/model/workout_history_model.dart';
 import 'package:flex_fit/theme/app_colors.dart';
 import 'package:flex_fit/Pages/Notifications/ViewModel/NotificationsViewModel.dart';
@@ -10,11 +11,12 @@ import 'package:flex_fit/Pages/Components/app_route.dart';
 
 import 'buildCard.dart';
 import 'workout_history_card.dart';
+import 'package:flex_fit/Pages/Dashboard/View/workout_history_page.dart';
 
 class Dashboardsummary extends StatelessWidget {
   final String username;
   final int workouts;
-  final int calories;
+  final int streak;
   final int time;
   final int progress;
   final dynamic photo;
@@ -24,7 +26,7 @@ class Dashboardsummary extends StatelessWidget {
     super.key,
     required this.username,
     required this.workouts,
-    required this.calories,
+    required this.streak,
     required this.time,
     required this.progress,
     required this.photo,
@@ -185,8 +187,8 @@ class Dashboardsummary extends StatelessWidget {
                         icon: Icons.fitness_center_rounded,
                       ),
                       buildCard(
-                        title: 'Calories',
-                        value: calories.toString(),
+                        title: 'Streak',
+                        value: '$streak ${streak == 1 ? "day" : "days"}',
                         icon: Icons.local_fire_department_rounded,
                       ),
                       buildCard(
@@ -221,15 +223,31 @@ class Dashboardsummary extends StatelessWidget {
                       ),
                       const Spacer(),
                       if (history.isNotEmpty)
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            '${history.length} sessions',
-                            style: TextStyle(
-                              color: context.textMuted,
-                              fontSize: (ref * 0.03).clamp(10.0, 16.0),
-                            ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              appRoute((_) => WorkoutHistoryPage(history: history)),
+                            );
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'See All',
+                                style: TextStyle(
+                                  color: context.accentLight,
+                                  fontSize: (ref * 0.033).clamp(12.0, 16.0),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(width: 2),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: context.accentLight,
+                                size: (ref * 0.03).clamp(10.0, 14.0),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -278,7 +296,8 @@ class Dashboardsummary extends StatelessWidget {
                       ),
                     )
                   else
-                    ...history.map((w) => WorkoutHistoryCard(workout: w)),
+                    // Show only the 5 most recent workouts on the dashboard
+                    ...history.take(5).map((w) => WorkoutHistoryCard(workout: w)),
 
                   SizedBox(height: ref * 0.05),
                 ],
@@ -305,12 +324,13 @@ class _Avatar extends StatelessWidget {
       backgroundColor: context.cardBg,
       child: ClipOval(
         child: photoUrl != null && photoUrl!.isNotEmpty
-            ? Image.network(
-                photoUrl!,
+            ? CachedNetworkImage(
+                imageUrl: photoUrl!,
                 width: radius * 2,
                 height: radius * 2,
                 fit: BoxFit.cover,
-                errorBuilder: (_, err, stack) => Icon(
+                placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                errorWidget: (_, _, _) => Icon(
                   Icons.person_rounded,
                   size: iconSize,
                   color: context.textMuted,

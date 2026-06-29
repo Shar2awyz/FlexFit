@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flex_fit/theme/app_colors.dart';
 import 'package:flex_fit/Pages/AddExercise/view/AddExercisePage.dart';
-import 'package:flex_fit/Pages/Components/CustomBottomNavBar.dart';
 import 'package:flex_fit/Pages/Components/app_route.dart';
-import 'package:flex_fit/Pages/Dashboard/View/Dashboard.dart';
-import 'package:flex_fit/Pages/Exercises.dart';
-import 'package:flex_fit/Pages/Profile/view/ProfilePage.dart';
-import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:flex_fit/Pages/Components/RootNavigationShell.dart';
 import '../WorkoutSplitRepository.dart';
 import '../viewmodel/WorkoutSplitViewModel.dart';
 
@@ -45,23 +41,7 @@ class _WorkoutSplitViewState extends State<_WorkoutSplitView> {
     super.dispose();
   }
 
-  void _onNavTap(BuildContext context, int index) {
-    if (index == 1) return;
-    switch (index) {
-      case 0:
-        Navigator.pushReplacement(
-            context, appRoute((_) => Dashboard(userid: widget.userid)));
-        break;
-      case 2:
-        Navigator.pushReplacement(
-            context, appRoute((_) => Exercises(userid: widget.userid)));
-        break;
-      case 3:
-        Navigator.pushReplacement(
-            context, appRoute((_) => Profile(userid: widget.userid)));
-        break;
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -88,10 +68,7 @@ class _WorkoutSplitViewState extends State<_WorkoutSplitView> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        onTap: (i) => _onNavTap(context, i),
-      ),
+
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -250,7 +227,7 @@ class _WorkoutSplitViewState extends State<_WorkoutSplitView> {
                   ),
                   onPressed: () => Navigator.pushAndRemoveUntil(
                     context,
-                    appRoute((_) => StartWorkout(userid: widget.userid)),
+                    appRoute((_) => RootNavigationShell(userid: widget.userid, initialIndex: 1)),
                     (route) => false,
                   ),
                 ),

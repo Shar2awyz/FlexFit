@@ -151,7 +151,7 @@ class NotificationsPage extends StatelessWidget {
                                 .select('username')
                                 .neq('id', currentUserId ?? '')
                                 .limit(5);
-                            if (users is List && users.isNotEmpty) {
+                            if (users.isNotEmpty) {
                               name = users[0]['username'] ?? 'Someone';
                             }
                           } catch (_) {}

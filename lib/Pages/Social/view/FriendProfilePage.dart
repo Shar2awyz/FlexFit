@@ -7,7 +7,7 @@ import '../SocialRepository.dart';
 import '../model/friendship_model.dart';
 import '../viewmodel/friend_profile_cubit.dart';
 import '../viewmodel/friend_profile_state.dart';
-import '../widgets/post_card.dart';
+import '../widgets/feed_card.dart';
 import 'CommentsPage.dart';
 
 class FriendProfilePage extends StatelessWidget {
@@ -93,7 +93,7 @@ class _FriendProfileView extends StatelessWidget {
                           return const SizedBox(height: 20);
                         }
                         final post = state.posts[i];
-                        return PostCard(
+                        return FeedCard(
                           post: post,
                           currentUserId: currentUserId,
                           onLike: () {},

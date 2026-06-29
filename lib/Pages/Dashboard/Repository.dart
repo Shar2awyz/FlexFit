@@ -30,23 +30,27 @@ class DashboardRepository {
         .from('workouts')
         .select('id, name, date, duration_seconds, workout_exercises(id, sets(id))')
         .eq('user_id', userId)
-        .order('date', ascending: false)
-        .limit(20);
+        .order('date', ascending: false);
 
     return (data as List)
         .map((e) => WorkoutHistoryModel.fromMap(e as Map<String, dynamic>))
         .toList();
   }
 
-  Future<WorkoutSessionDetail> getWorkoutDetail(String workoutId) async {
+  Future<Map<String, dynamic>> getWorkoutDetailRaw(String workoutId) async {
     final data = await supabase
         .from('workouts')
         .select(
-          'id, name, date, duration_seconds, workout_exercises(id, exercises(id, name, muscle_group), sets(id, set_number, reps, weight))',
+          'id, name, date, duration_seconds, workout_exercises(id, order_index, exercises(id, name, muscle_group), sets(id, set_number, reps, weight))',
         )
         .eq('id', workoutId)
+        .order('order_index', referencedTable: 'workout_exercises', ascending: true)
         .single();
+    return data;
+  }
 
+  Future<WorkoutSessionDetail> getWorkoutDetail(String workoutId) async {
+    final data = await getWorkoutDetailRaw(workoutId);
     return WorkoutSessionDetail.fromMap(data);
   }
 

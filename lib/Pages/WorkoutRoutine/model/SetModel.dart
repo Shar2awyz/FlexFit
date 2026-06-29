@@ -16,4 +16,12 @@ class SetModel {
       number: json['set_number'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'reps': reps,
+      'weight': weight,
+      'set_number': number,
+    };
+  }
 }

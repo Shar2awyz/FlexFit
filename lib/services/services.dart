@@ -61,11 +61,9 @@ class supa {
   }
 
   Future<Map<String, dynamic>?> getuserdata(String userid) async {
-
-
     final data = await supabase
         .from('Users')
-        .select('username, email, image_url') // add whatever columns you need
+        .select()
         .eq('id', userid)
         .single();
 

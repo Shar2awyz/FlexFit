@@ -5,20 +5,20 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'Pages/Components/app_route.dart';
-import 'Pages/ForgotPassword/view/ResetPasswordPage.dart';
+import 'package:flex_fit/Pages/Components/app_route.dart';
+import 'package:flex_fit/Pages/ForgotPassword/view/ResetPasswordPage.dart';
 
 import 'package:flex_fit/services/sharedpref.dart';
 import 'package:flex_fit/services/settings_service.dart';
 import 'package:flex_fit/services/notification_service.dart';
 
-import 'Pages/Dashboard/View/Dashboard.dart';
-import 'Pages/Login/View/LoginScreen.dart';
-import 'Pages/Splash/SplashScreen.dart';
-import 'Pages/WorkoutBegin/Repository.dart';
-import 'Pages/WorkoutBegin/viewmodel/cubit/WorkoutBeginCubit.dart';
-import 'Pages/Notifications/Repository/NotificationsRepository.dart';
-import 'Pages/Notifications/ViewModel/NotificationsViewModel.dart';
+import 'package:flex_fit/Pages/Components/RootNavigationShell.dart';
+import 'package:flex_fit/Pages/Login/View/LoginScreen.dart';
+import 'package:flex_fit/Pages/Splash/SplashScreen.dart';
+import 'package:flex_fit/Pages/WorkoutBegin/Repository.dart';
+import 'package:flex_fit/Pages/WorkoutBegin/viewmodel/cubit/WorkoutBeginCubit.dart';
+import 'package:flex_fit/Pages/Notifications/Repository/NotificationsRepository.dart';
+import 'package:flex_fit/Pages/Notifications/ViewModel/NotificationsViewModel.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +27,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox('settings');
   await Hive.openBox('seen_stories');
+  await Hive.openBox('local_cache');
 
   await dotenv.load(fileName: ".env");
   await Supabase.initialize(
@@ -85,6 +86,10 @@ class _MyAppState extends State<MyApp> {
         });
       } else if (event == AuthChangeEvent.signedIn) {
         NotificationService.registerBackgroundSync();
+        final user = data.session?.user;
+        if (user != null && mounted) {
+          context.read<WorkoutBeginCubit>().checkAndResumeActiveWorkout(user.id);
+        }
       } else if (event == AuthChangeEvent.signedOut) {
         NotificationService.cancelBackgroundSync();
       }
@@ -101,6 +106,10 @@ class _MyAppState extends State<MyApp> {
     userid = await _prefs.getUserId();
     if (userid != null) {
       NotificationService.registerBackgroundSync();
+      if (mounted) {
+        // Run asynchronously without blocking state loading
+        context.read<WorkoutBeginCubit>().checkAndResumeActiveWorkout(userid!);
+      }
       setState(() => isLoading = false);
     } else {
       await Future.delayed(const Duration(seconds: 3));
@@ -122,7 +131,7 @@ class _MyAppState extends State<MyApp> {
           ? const SplashScreen()
           : (userid == null
               ? const LoginScreen()
-              : Dashboard(userid: userid!)),
+              : RootNavigationShell(userid: userid!)),
     );
   }
 }

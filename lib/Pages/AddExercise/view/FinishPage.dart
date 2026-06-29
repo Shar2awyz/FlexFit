@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flex_fit/Pages/AddExercise/Components/FinalComponent.dart';
 import 'package:flex_fit/Pages/Components/app_route.dart';
-import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
+import 'package:flex_fit/Pages/Components/RootNavigationShell.dart';
 import '../model/ExerciseListItem.dart';
 
 class FinishPage extends StatefulWidget {
@@ -93,7 +93,7 @@ class _FinishPageState extends State<FinishPage> {
       } else {
         Navigator.pushAndRemoveUntil(
           context,
-          appRoute((_) => StartWorkout(userid: userId)),
+          appRoute((_) => RootNavigationShell(userid: userId, initialIndex: 1)),
           (route) => false,
         );
       }

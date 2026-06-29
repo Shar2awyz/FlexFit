@@ -1,3 +1,4 @@
+import '../../Dashboard/model/workout_detail_model.dart';
 import 'social_user_model.dart';
 
 class PostModel {
@@ -13,6 +14,9 @@ class PostModel {
   final bool isLiked;
   final bool isSaved;
   final bool isReposted;
+  final String type;
+  final String? workoutId;
+  final WorkoutSessionDetail? workoutData;
 
   const PostModel({
     required this.id,
@@ -27,6 +31,9 @@ class PostModel {
     this.isLiked = false,
     this.isSaved = false,
     this.isReposted = false,
+    this.type = 'post',
+    this.workoutId,
+    this.workoutData,
   });
 
   factory PostModel.fromJson(
@@ -51,6 +58,16 @@ class PostModel {
         (repostsList?.isNotEmpty == true ? repostsList!.first['count'] : 0)
             as int? ?? 0;
 
+    final workoutsRaw = json['workouts'];
+    WorkoutSessionDetail? workoutData;
+    if (workoutsRaw != null) {
+      if (workoutsRaw is List && workoutsRaw.isNotEmpty) {
+        workoutData = WorkoutSessionDetail.fromMap(workoutsRaw.first as Map<String, dynamic>);
+      } else if (workoutsRaw is Map<String, dynamic>) {
+        workoutData = WorkoutSessionDetail.fromMap(workoutsRaw);
+      }
+    }
+
     return PostModel(
       id: json['id'] as String,
       userId: json['user_id'] as String,
@@ -64,6 +81,9 @@ class PostModel {
       isLiked: isLiked,
       isSaved: isSaved,
       isReposted: isReposted,
+      type: json['type'] as String? ?? 'post',
+      workoutId: json['workout_id'] as String?,
+      workoutData: workoutData,
     );
   }
 
@@ -74,6 +94,9 @@ class PostModel {
     bool? isLiked,
     bool? isSaved,
     bool? isReposted,
+    String? type,
+    String? workoutId,
+    WorkoutSessionDetail? workoutData,
   }) {
     return PostModel(
       id: id,
@@ -88,6 +111,9 @@ class PostModel {
       isLiked: isLiked ?? this.isLiked,
       isSaved: isSaved ?? this.isSaved,
       isReposted: isReposted ?? this.isReposted,
+      type: type ?? this.type,
+      workoutId: workoutId ?? this.workoutId,
+      workoutData: workoutData ?? this.workoutData,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flex_fit/theme/app_colors.dart';
+import 'package:flex_fit/services/cache_service.dart';
 
 import '../../AddExercise/view/AddExercisePage.dart';
 import '../../Components/app_route.dart';
@@ -24,24 +25,69 @@ class WorkoutRoutine extends StatefulWidget {
 
 class _WorkoutRoutineState extends State<WorkoutRoutine> {
   final vm = WorkoutViewModel();
-  late Future<List<SplitDay>> future;
+  List<SplitDay>? days;
+  bool isLoading = true;
+  String? error;
   final Map<String, Future<List<ExerciseModel>>> _exercisesFuture = {};
   final _supabase = Supabase.instance.client;
 
   @override
   void initState() {
     super.initState();
-    future = vm.loadRoutine(widget.splitId);
+    _loadRoutineData();
+  }
+
+  Future<void> _loadRoutineData() async {
+    final cached = CacheService.get('workout_routine_days_${widget.splitId}');
+    if (cached != null) {
+      try {
+        setState(() {
+          days = (cached as List)
+              .map((e) => SplitDay.fromJson(Map<String, dynamic>.from(e)))
+              .toList();
+          isLoading = false;
+        });
+      } catch (e) {
+        print("Error restoring routine cache: $e");
+      }
+    } else {
+      setState(() {
+        isLoading = true;
+      });
+    }
+
+    try {
+      final freshDays = await vm.loadRoutine(widget.splitId);
+      setState(() {
+        days = freshDays;
+        isLoading = false;
+        error = null;
+      });
+      await CacheService.put(
+        'workout_routine_days_${widget.splitId}',
+        freshDays.map((e) => e.toJson()).toList(),
+      );
+    } catch (e) {
+      print("Error loading routine: $e");
+      if (days == null) {
+        setState(() {
+          error = "Failed to load routine days";
+          isLoading = false;
+        });
+      }
+    }
   }
 
   Future<List<ExerciseModel>> _loadExercises(String dayId) =>
       _exercisesFuture.putIfAbsent(
           dayId, () => vm.loadExercisesWithSets(dayId));
 
-  void _reload() => setState(() {
-        future = vm.loadRoutine(widget.splitId);
-        _exercisesFuture.clear();
-      });
+  void _reload() {
+    setState(() {
+      _exercisesFuture.clear();
+    });
+    _loadRoutineData();
+  }
 
   Future<void> _renameDay(String dayId, String currentName) async {
     final controller = TextEditingController(text: currentName);
@@ -127,23 +173,22 @@ class _WorkoutRoutineState extends State<WorkoutRoutine> {
         ),
         toolbarHeight: sw * 0.18,
       ),
-      body: FutureBuilder<List<SplitDay>>(
-        future: future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: Builder(
+        builder: (context) {
+          if (isLoading && days == null) {
             return Center(
                 child:
                     CircularProgressIndicator(color: context.accentLight));
           }
 
-          if (snapshot.hasError) {
+          if (error != null && days == null) {
             return Center(
-              child: Text(snapshot.error.toString(),
+              child: Text(error!,
                   style: TextStyle(color: context.textSecondary)),
             );
           }
 
-          final days = snapshot.data ?? [];
+          final daysList = days ?? [];
 
           return Column(
             children: [
@@ -158,8 +203,7 @@ class _WorkoutRoutineState extends State<WorkoutRoutine> {
                       appRoute((_) =>
                           AddExercise(splitId: widget.splitId)),
                     );
-                    setState(
-                        () => future = vm.loadRoutine(widget.splitId));
+                    _loadRoutineData();
                   },
                   child: Container(
                     height: sw * 0.13,
@@ -189,7 +233,7 @@ class _WorkoutRoutineState extends State<WorkoutRoutine> {
 
               // ── Day list ───────────────────────────────────────────────
               Expanded(
-                child: days.isEmpty
+                child: daysList.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -209,21 +253,21 @@ class _WorkoutRoutineState extends State<WorkoutRoutine> {
                     : ListView.builder(
                         padding: EdgeInsets.symmetric(
                             horizontal: sw * 0.04, vertical: sw * 0.01),
-                        itemCount: days.length,
+                        itemCount: daysList.length,
                         itemBuilder: (context, index) =>
                             _DayCard(
-                              day: days[index],
+                              day: daysList[index],
                               sw: sw,
                               loadExercises: _loadExercises,
                               onRename: () =>
-                                  _renameDay(days[index].id, days[index].name),
-                              onDelete: () => _deleteDay(days[index].id),
+                                  _renameDay(daysList[index].id, daysList[index].name),
+                              onDelete: () => _deleteDay(daysList[index].id),
                               onModify: () async {
                                 await Navigator.push(
                                   context,
                                   appRoute((_) => ModifyDayPage(
-                                        splitDayId: days[index].id,
-                                        dayName: days[index].name,
+                                        splitDayId: daysList[index].id,
+                                        dayName: daysList[index].name,
                                       )),
                                 );
                                 _reload();

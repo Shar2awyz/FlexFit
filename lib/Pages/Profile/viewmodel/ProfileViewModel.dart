@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flex_fit/services/cache_service.dart';
 import '../../Social/SocialRepository.dart';
 import '../ProfileRepository.dart';
 import '../model/UserProfileModel.dart';
@@ -19,10 +20,59 @@ class ProfileViewModel extends ChangeNotifier {
   bool isLoading = true;
   String? error;
 
+  Future<void> _saveToCache() async {
+    try {
+      await CacheService.put('profile_data_$userId', {
+        'user': user?.toJson(),
+        'workoutCount': workoutCount,
+        'totalSets': totalSets,
+        'friendsCount': friendsCount,
+        'trackedExercises': trackedExercises.map((e) => e.toJson()).toList(),
+      });
+    } catch (e) {
+      print("Error saving profile to cache: $e");
+    }
+  }
+
   Future<void> loadAll() async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
+    final cached = CacheService.get('profile_data_$userId');
+    if (cached != null) {
+      try {
+        final cachedUser = cached['user'] as Map<String, dynamic>?;
+        final cachedWorkoutCount = cached['workoutCount'] as int?;
+        final cachedTotalSets = cached['totalSets'] as int?;
+        final cachedFriendsCount = cached['friendsCount'] as int?;
+        final cachedTracked = cached['trackedExercises'] as List?;
+
+        if (cachedUser != null) {
+          user = UserProfileModel.fromJson(cachedUser);
+        }
+        if (cachedWorkoutCount != null) {
+          workoutCount = cachedWorkoutCount;
+        }
+        if (cachedTotalSets != null) {
+          totalSets = cachedTotalSets;
+        }
+        if (cachedFriendsCount != null) {
+          friendsCount = cachedFriendsCount;
+        }
+        if (cachedTracked != null) {
+          trackedExercises = cachedTracked
+              .map((e) => TrackedExerciseModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList();
+        }
+        isLoading = false;
+        error = null;
+        notifyListeners();
+      } catch (e) {
+        print("Error restoring profile cache: $e");
+      }
+    } else {
+      isLoading = true;
+      error = null;
+      notifyListeners();
+    }
+
     try {
       final userResult = await _repo.getUser(userId);
       final stats = await _repo.getStats(userId);
@@ -33,8 +83,13 @@ class ProfileViewModel extends ChangeNotifier {
       totalSets = stats.totalSets;
       friendsCount = friends.length;
       trackedExercises = tracked;
+      error = null;
+      await _saveToCache();
     } catch (e) {
-      error = e.toString();
+      print("Error loading profile from network: $e");
+      if (user == null) {
+        error = e.toString();
+      }
     } finally {
       isLoading = false;
       notifyListeners();
@@ -53,6 +108,7 @@ class ProfileViewModel extends ChangeNotifier {
     trackedExercises.removeWhere((t) => t.id == id);
     notifyListeners();
     await _repo.removeTracked(id);
+    await _saveToCache();
   }
 
   Future<void> setGoal(String id, double goalKg) async {
@@ -61,12 +117,14 @@ class ProfileViewModel extends ChangeNotifier {
     trackedExercises[idx] = trackedExercises[idx].copyWith(goalWeightKg: goalKg);
     notifyListeners();
     await _repo.updateGoalWeight(id, goalKg);
+    await _saveToCache();
   }
 
   Future<void> updateBodyWeight(double weightKg) async {
     await _repo.updateBodyWeight(userId, weightKg);
     user = await _repo.getUser(userId);
     notifyListeners();
+    await _saveToCache();
   }
 
   Future<void> updateProfile({
@@ -75,6 +133,7 @@ class ProfileViewModel extends ChangeNotifier {
     required String email,
     required double weightKg,
     String? gender,
+    int? restDaysPerWeek,
   }) async {
     isLoading = true;
     error = null;
@@ -87,8 +146,10 @@ class ProfileViewModel extends ChangeNotifier {
         email: email,
         weightKg: weightKg,
         gender: gender,
+        restDaysPerWeek: restDaysPerWeek,
       );
       user = await _repo.getUser(userId);
+      await _saveToCache();
     } catch (e) {
       error = e.toString();
       rethrow;
@@ -102,10 +163,12 @@ class ProfileViewModel extends ChangeNotifier {
     await _repo.uploadAvatar(file, userId);
     user = await _repo.getUser(userId);
     notifyListeners();
+    await _saveToCache();
   }
 
   Future<void> _reloadTracked() async {
     trackedExercises = await _repo.getTrackedExercises(userId);
     notifyListeners();
+    await _saveToCache();
   }
 }

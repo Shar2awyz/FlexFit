@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../Components/LogInComponents/buildTextField.dart';
 import '../../Components/errorsnackbar.dart';
-import '../../Dashboard/View/Dashboard.dart';
+import '../../Components/RootNavigationShell.dart';
 import '../../SignUp/view/SignUpPage.dart';
 import '../LoginRepository.dart';
 import '../ViewModel/ViewModel.dart';
@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     vm.startAuthListener((userId) {
       Navigator.pushReplacement(
         context,
-        appRoute( (_) => Dashboard(userid: userId),
+        appRoute( (_) => RootNavigationShell(userid: userId),
         ),
       );
     });
@@ -193,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Navigator.pushReplacement(
                                         context,
                                         appRoute( (_) =>
-                                              Dashboard(userid: userId),
+                                              RootNavigationShell(userid: userId),
                                         ),
                                       );
                                     },

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flex_fit/services/cache_service.dart';
 import 'WorkoutBeginState.dart';
 
 import '../../Repository.dart';
@@ -29,6 +30,70 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
   bool get hasStructuralChanges =>
       _exercisesAddedThisWorkout.isNotEmpty || _orderChanged;
 
+  Future<void> _saveToCache() async {
+    final userId = repo.supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    if (workoutId == null) {
+      await CacheService.delete('active_workout_state_$userId');
+      return;
+    }
+
+    final data = {
+      'workoutId': workoutId,
+      'splitDayId': _splitDayId,
+      'workoutName': workoutName,
+      'startTime': startTime?.toIso8601String(),
+      'exercises': exercises.map((e) => e.toJson()).toList(),
+      'totalSets': totalSets,
+      'totalVolume': totalVolume,
+      'exercisesAddedThisWorkout': _exercisesAddedThisWorkout.toList(),
+      'orderChanged': _orderChanged,
+    };
+    await CacheService.put('active_workout_state_$userId', data);
+  }
+
+  Future<void> _clearCache() async {
+    final userId = repo.supabase.auth.currentUser?.id;
+    if (userId == null) return;
+    await CacheService.delete('active_workout_state_$userId');
+  }
+
+  Future<void> checkAndResumeActiveWorkout(String userId) async {
+    final cached = CacheService.get('active_workout_state_$userId');
+    if (cached == null) return;
+
+    try {
+      workoutId = cached['workoutId'] as String?;
+      _splitDayId = cached['splitDayId'] as String?;
+      workoutName = cached['workoutName'] as String?;
+      if (cached['startTime'] != null) {
+        startTime = DateTime.parse(cached['startTime'] as String);
+      }
+      totalSets = cached['totalSets'] as int? ?? 0;
+      totalVolume = (cached['totalVolume'] as num? ?? 0).toDouble();
+
+      final exList = cached['exercises'] as List?;
+      if (exList != null) {
+        exercises = exList
+            .map((e) => ExerciseWithSets.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+
+      final addedList = cached['exercisesAddedThisWorkout'] as List?;
+      if (addedList != null) {
+        _exercisesAddedThisWorkout.clear();
+        _exercisesAddedThisWorkout.addAll(addedList.cast<String>());
+      }
+      _orderChanged = cached['orderChanged'] as bool? ?? false;
+
+      _emitLoaded();
+    } catch (e) {
+      print("Error resuming active workout: $e");
+      await _clearCache();
+    }
+  }
+
   void _emitLoaded() => emit(WorkoutBeginLoaded(
         List.from(exercises),
         totalSets: totalSets,
@@ -49,10 +114,15 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
       workoutId = await repo.createWorkout(userId: userId, name: name);
 
       final data = await repo.getDayExercises(dayId);
+      final sortedData = List.from(data)..sort((a, b) {
+        final aOrd = a['order_index'] as int? ?? 0;
+        final bOrd = b['order_index'] as int? ?? 0;
+        return aOrd.compareTo(bOrd);
+      });
       int order = 0;
       final temp = <ExerciseWithSets>[];
 
-      for (final e in data) {
+      for (final e in sortedData) {
         final ex = e['exercises'];
         final weId = await repo.createWorkoutExercise(
           workoutId: workoutId!,
@@ -75,6 +145,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
 
       exercises = temp;
       _emitLoaded();
+      await _saveToCache();
     } catch (e) {
       emit(WorkoutBeginError(e.toString()));
     }
@@ -94,6 +165,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     totalSets += 1;
     totalVolume += (weight * reps);
     _emitLoaded();
+    await _saveToCache();
 
     // Insert and store the returned UUID so the set can be deleted later.
     final dbId = await repo.insertSet(newSet.toInsert(ex.workoutExerciseId!));
@@ -103,6 +175,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
       weight: weight,
       number: newSet.number,
     ));
+    await _saveToCache();
   }
 
   /// Called when the user swipes away a set row.
@@ -117,6 +190,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     totalVolume = (totalVolume - removed.weight * removed.reps)
         .clamp(0, double.maxFinite);
     _emitLoaded();
+    await _saveToCache();
 
     if (removed.dbId != null) {
       await repo.removeSet(removed.dbId!);
@@ -127,6 +201,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
   Future<void> deleteWorkout() async {
     if (workoutId == null) return;
     await repo.deleteWorkout(workoutId!);
+    await _clearCache();
     emit(WorkoutFinished());
   }
 
@@ -157,6 +232,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     }
 
     _emitLoaded();
+    await _saveToCache();
   }
 
   /// Remove an exercise from the current workout.
@@ -166,6 +242,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
 
     final ex = exercises.removeAt(idx);
     _emitLoaded();
+    await _saveToCache();
 
     if (ex.workoutExerciseId != null) {
       await repo.removeWorkoutExercise(ex.workoutExerciseId!);
@@ -192,6 +269,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     );
 
     _emitLoaded();
+    await _saveToCache();
 
     if (oldEx.workoutExerciseId != null) {
       await repo.replaceWorkoutExercise(
@@ -209,6 +287,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     exercises.insert(newIndex, item);
     _orderChanged = true;
     _emitLoaded();
+    await _saveToCache();
 
     for (int i = 0; i < exercises.length; i++) {
       final weId = exercises[i].workoutExerciseId;
@@ -265,6 +344,7 @@ class WorkoutBeginCubit extends Cubit<WorkoutBeginState> {
     if (workoutId == null || startTime == null) return;
     final duration = DateTime.now().difference(startTime!).inSeconds;
     await repo.finishWorkout(workoutId: workoutId!, durationSeconds: duration);
+    await _clearCache();
     emit(WorkoutFinished());
   }
 }

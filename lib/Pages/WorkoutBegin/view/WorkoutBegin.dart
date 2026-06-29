@@ -7,6 +7,7 @@ import 'package:flex_fit/theme/app_colors.dart';
 
 import '../../AddExercise/view/AddExercisePage.dart';
 import '../../Components/app_route.dart';
+import '../../Components/CongratsPRDialog.dart';
 import '../viewmodel/cubit/WorkoutBeginCubit.dart';
 import '../viewmodel/cubit/WorkoutBeginState.dart';
 import '../model/SetModel.dart';
@@ -252,7 +253,56 @@ class _WorkoutBeginViewState extends State<_WorkoutBeginView> {
       }
     }
 
+    // Check for achieved tracked PR goals in this workout
+    final achievedPRs = <String>[];
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser?.id;
+    if (userId != null && cubit.workoutId != null) {
+      try {
+        final trackedRows = await supabase
+            .from('tracked_exercises')
+            .select('exercise_id, goal_weight, exercises(name)')
+            .eq('user_id', userId);
+
+        for (final row in trackedRows as List) {
+          final exerciseId = row['exercise_id'] as String;
+          final goalWeight = (row['goal_weight'] as num?)?.toDouble();
+          final exerciseName = (row['exercises'] as Map?)?['name'] as String? ?? 'Exercise';
+          if (goalWeight == null || goalWeight <= 0) continue;
+
+          final exIndex = cubit.exercises.indexWhere((e) => e.exerciseId == exerciseId);
+          if (exIndex != -1) {
+            final currentSets = cubit.exercises[exIndex].sets;
+            if (currentSets.isNotEmpty) {
+              final currentMax = currentSets
+                  .map((s) => s.weight)
+                  .reduce((a, b) => a > b ? a : b);
+
+              if (currentMax >= goalWeight) {
+                final prevMax = await cubit.repo.getPreviousMaxWeight(
+                  exerciseId: exerciseId,
+                  userId: userId,
+                  excludeWorkoutId: cubit.workoutId!,
+                );
+                if (prevMax == null || prevMax < goalWeight) {
+                  achievedPRs.add(exerciseName);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print("Error checking PR achievements: $e");
+      }
+    }
+
     await cubit.finishWorkout();
+    if (!mounted) return;
+
+    if (achievedPRs.isNotEmpty) {
+      await CongratsPRDialog.show(context, achievedPRs);
+    }
+
     if (!mounted) return;
     nav.pop();
   }
@@ -624,7 +674,7 @@ class _ExerciseCard extends StatelessWidget {
                           letterSpacing: 0.8)),
                 ),
                 SizedBox(
-                  width: sw * 0.18,
+                  width: sw * 0.16,
                   child: Text('KG',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -633,8 +683,9 @@ class _ExerciseCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.8)),
                 ),
+                SizedBox(width: sw * 0.02),
                 SizedBox(
-                  width: sw * 0.18,
+                  width: sw * 0.16,
                   child: Text('REPS',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -643,6 +694,7 @@ class _ExerciseCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.8)),
                 ),
+                SizedBox(width: sw * 0.02),
                 SizedBox(width: sw * 0.11),
               ],
             ),
@@ -737,8 +789,22 @@ class _ExerciseCard extends StatelessWidget {
                               fontSize: sw * 0.032),
                         ),
                       ),
-                      SizedBox(
-                        width: sw * 0.18,
+                      Container(
+                        width: sw * 0.16,
+                        height: sw * 0.08,
+                        decoration: BoxDecoration(
+                          color: isDone
+                              ? Colors.green.withValues(alpha: 0.05)
+                              : context.innerCard,
+                          borderRadius: BorderRadius.circular(sw * 0.015),
+                          border: Border.all(
+                            color: isDone
+                                ? Colors.green.withValues(alpha: 0.2)
+                                : context.divider,
+                            width: 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
                         child: TextField(
                           controller: weightControllers[i],
                           keyboardType:
@@ -752,15 +818,31 @@ class _ExerciseCard extends StatelessWidget {
                           decoration: InputDecoration(
                             hintText: weightHint,
                             hintStyle: TextStyle(
-                                color: context.textHint,
+                                color: context.textHint.withValues(alpha: 0.5),
                                 fontSize: sw * 0.036),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
+                            isDense: true,
                           ),
                         ),
                       ),
-                      SizedBox(
-                        width: sw * 0.18,
+                      SizedBox(width: sw * 0.02),
+                      Container(
+                        width: sw * 0.16,
+                        height: sw * 0.08,
+                        decoration: BoxDecoration(
+                          color: isDone
+                              ? Colors.green.withValues(alpha: 0.05)
+                              : context.innerCard,
+                          borderRadius: BorderRadius.circular(sw * 0.015),
+                          border: Border.all(
+                            color: isDone
+                                ? Colors.green.withValues(alpha: 0.2)
+                                : context.divider,
+                            width: 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
                         child: TextField(
                           controller: repsControllers[i],
                           keyboardType: TextInputType.number,
@@ -772,13 +854,15 @@ class _ExerciseCard extends StatelessWidget {
                           decoration: InputDecoration(
                             hintText: repsHint,
                             hintStyle: TextStyle(
-                                color: context.textHint,
+                                color: context.textHint.withValues(alpha: 0.5),
                                 fontSize: sw * 0.036),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
+                            isDense: true,
                           ),
                         ),
                       ),
+                      SizedBox(width: sw * 0.02),
                       SizedBox(
                         width: sw * 0.11,
                         child: GestureDetector(
@@ -786,12 +870,45 @@ class _ExerciseCard extends StatelessWidget {
                             if (isDone) {
                               onUncomplete(i);
                             } else {
-                              final weight = double.tryParse(
-                                      weightControllers[i].text) ??
-                                  0;
-                              final reps = int.tryParse(
-                                      repsControllers[i].text) ??
-                                  0;
+                              String weightVal = weightControllers[i].text.trim();
+                              String repsVal = repsControllers[i].text.trim();
+
+                              if (weightVal.isEmpty) {
+                                String found = '';
+                                for (int k = i - 1; k >= 0; k--) {
+                                  if (weightControllers[k].text.trim().isNotEmpty) {
+                                    found = weightControllers[k].text.trim();
+                                    break;
+                                  }
+                                }
+                                if (found.isEmpty && weightHint != '0' && weightHint.isNotEmpty) {
+                                  found = weightHint;
+                                }
+                                if (found.isNotEmpty) {
+                                  weightControllers[i].text = found;
+                                  weightVal = found;
+                                }
+                              }
+
+                              if (repsVal.isEmpty) {
+                                String found = '';
+                                for (int k = i - 1; k >= 0; k--) {
+                                  if (repsControllers[k].text.trim().isNotEmpty) {
+                                    found = repsControllers[k].text.trim();
+                                    break;
+                                  }
+                                }
+                                if (found.isEmpty && repsHint != '0' && repsHint.isNotEmpty) {
+                                  found = repsHint;
+                                }
+                                if (found.isNotEmpty) {
+                                  repsControllers[i].text = found;
+                                  repsVal = found;
+                                }
+                              }
+
+                              final weight = double.tryParse(weightVal) ?? 0;
+                              final reps = int.tryParse(repsVal) ?? 0;
                               if (weight == 0 || reps == 0) return;
                               onComplete(i, weight, reps);
                             }

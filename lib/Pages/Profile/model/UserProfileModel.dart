@@ -7,6 +7,7 @@ class UserProfileModel {
   final String fullname;
   final String email;
   final String? gender;
+  final int restDaysPerWeek;
 
   const UserProfileModel({
     required this.id,
@@ -17,6 +18,7 @@ class UserProfileModel {
     required this.fullname,
     required this.email,
     this.gender,
+    this.restDaysPerWeek = 4,
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
@@ -30,7 +32,22 @@ class UserProfileModel {
       fullname: json['fullname'] as String? ?? '',
       email: json['email'] as String? ?? '',
       gender: json['Gender'] as String?,
+      restDaysPerWeek: json['rest_days_per_week'] as int? ?? 4,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'image_url': imageUrl,
+      'weight(kg)': weightKg,
+      'created_at': createdAt,
+      'fullname': fullname,
+      'email': email,
+      'Gender': gender,
+      'rest_days_per_week': restDaysPerWeek,
+    };
   }
 
   String get memberSince {

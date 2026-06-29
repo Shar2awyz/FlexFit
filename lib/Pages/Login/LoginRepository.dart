@@ -25,7 +25,7 @@ class LoginRepository {
       }
 
       return user.id;
-    } on AuthException catch (e) {
+    } on AuthException {
       throw InvalidCredentialsException("Invalid credentials exception");
     }
   }

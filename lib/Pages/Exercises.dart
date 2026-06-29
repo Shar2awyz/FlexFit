@@ -3,13 +3,7 @@ import 'package:flex_fit/theme/app_colors.dart';
 
 import 'package:flex_fit/Pages/ExerciseDetails/view/ExerciseDetailsPage.dart';
 import 'package:flex_fit/Pages/Exercises_Components/Exercises_Component.dart';
-import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
-import 'package:flex_fit/Pages/Social/view/SocialFeedPage.dart';
-
-import 'Components/CustomBottomNavBar.dart';
 import 'Components/app_route.dart';
-import 'Dashboard/View/Dashboard.dart';
-import 'Profile/view/ProfilePage.dart';
 
 class Exercises extends StatelessWidget {
   final String userid;
@@ -19,7 +13,6 @@ class Exercises extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sw = MediaQuery.of(context).size.width;
-    const int index = 2;
 
     const muscles = [
       {'title': 'Chest', 'image': 'images/muscle_icon_06.png'},
@@ -58,39 +51,7 @@ class Exercises extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: index,
-        onTap: (i) {
-          if (i == index) return;
-          if (i == 0) {
-            Navigator.pushReplacement(
-                context, appRoute((_) => Dashboard(userid: userid)));
-          } else if (i == 1) {
-            Navigator.pushReplacement(
-                context, appRoute((_) => StartWorkout(userid: userid)));
-          } else if (i == 3) {
-            Navigator.pushReplacement(
-                context, appRoute((_) => Profile(userid: userid)));
-          } else if (i == 4) {
-            Navigator.push(
-              context,
-              appRoute((_) => SocialFeedPage(
-                currentUserId: userid,
-                onNavTap: (tab) {
-                  Navigator.pop(context);
-                  if (tab == 0) {
-                    Navigator.pushReplacement(context, appRoute((_) => Dashboard(userid: userid)));
-                  } else if (tab == 1) {
-                    Navigator.pushReplacement(context, appRoute((_) => StartWorkout(userid: userid)));
-                  } else if (tab == 3) {
-                    Navigator.pushReplacement(context, appRoute((_) => Profile(userid: userid)));
-                  }
-                },
-              )),
-            );
-          }
-        },
-      ),
+
       body: GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           mainAxisSpacing: sw * 0.04,

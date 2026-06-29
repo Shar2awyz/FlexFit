@@ -3,12 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:flex_fit/theme/app_colors.dart';
-import 'package:flex_fit/Pages/Components/CustomBottomNavBar.dart';
 import 'package:flex_fit/Pages/Components/app_route.dart';
-import 'package:flex_fit/Pages/Dashboard/View/Dashboard.dart';
-import 'package:flex_fit/Pages/Exercises.dart';
-import 'package:flex_fit/Pages/Profile/view/ProfilePage.dart';
-import 'package:flex_fit/Pages/Social/view/SocialFeedPage.dart';
 import 'package:flex_fit/Pages/WorkoutRoutine/view/WorkoutRoutine.dart';
 import 'package:flex_fit/Pages/premadeworkout/view/PremadeWorkoutPage.dart';
 import 'package:flex_fit/Pages/WorkoutSplit/view/WorkoutSplitPage.dart';
@@ -104,44 +99,7 @@ class _StartWorkoutView extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        onTap: (i) {
-          if (i == 1) return;
-          switch (i) {
-            case 0:
-              Navigator.pushReplacement(
-                  context, appRoute((_) => Dashboard(userid: userid)));
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                  context, appRoute((_) => Exercises(userid: userid)));
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                  context, appRoute((_) => Profile(userid: userid)));
-              break;
-            case 4:
-              Navigator.push(
-                context,
-                appRoute((_) => SocialFeedPage(
-                  currentUserId: userid,
-                  onNavTap: (tab) {
-                    Navigator.pop(context);
-                    if (tab == 0) {
-                      Navigator.pushReplacement(context, appRoute((_) => Dashboard(userid: userid)));
-                    } else if (tab == 2) {
-                      Navigator.pushReplacement(context, appRoute((_) => Exercises(userid: userid)));
-                    } else if (tab == 3) {
-                      Navigator.pushReplacement(context, appRoute((_) => Profile(userid: userid)));
-                    }
-                  },
-                )),
-              );
-              break;
-          }
-        },
-      ),
+
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
             sw * 0.04, 0, sw * 0.04, sw * 0.06),

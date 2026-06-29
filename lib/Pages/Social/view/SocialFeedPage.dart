@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flex_fit/Pages/Components/CustomBottomNavBar.dart';
 import 'package:flex_fit/Pages/Components/app_route.dart';
 import 'package:flex_fit/theme/app_colors.dart';
 
@@ -9,7 +8,7 @@ import '../SocialRepository.dart';
 import '../model/story_model.dart';
 import '../viewmodel/social_feed_cubit.dart';
 import '../viewmodel/social_feed_state.dart';
-import '../widgets/post_card.dart';
+import '../widgets/feed_card.dart';
 import '../widgets/story_circle.dart';
 import 'AddByEmailPage.dart';
 import 'CommentsPage.dart';
@@ -21,24 +20,22 @@ import 'StoryViewerPage.dart';
 
 class SocialFeedPage extends StatelessWidget {
   final String currentUserId;
-  final void Function(int)? onNavTap;
 
-  const SocialFeedPage({super.key, required this.currentUserId, this.onNavTap});
+  const SocialFeedPage({super.key, required this.currentUserId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
           SocialFeedCubit(SocialRepository(), userId: currentUserId)..load(),
-      child: _SocialFeedView(currentUserId: currentUserId, onNavTap: onNavTap),
+      child: _SocialFeedView(currentUserId: currentUserId),
     );
   }
 }
 
 class _SocialFeedView extends StatefulWidget {
   final String currentUserId;
-  final void Function(int)? onNavTap;
-  const _SocialFeedView({required this.currentUserId, this.onNavTap});
+  const _SocialFeedView({required this.currentUserId});
 
   @override
   State<_SocialFeedView> createState() => _SocialFeedViewState();
@@ -72,17 +69,7 @@ class _SocialFeedViewState extends State<_SocialFeedView> {
 
     return Scaffold(
       backgroundColor: context.pageBg,
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 4,
-        onTap: (i) {
-          if (i == 4) return;
-          if (widget.onNavTap != null) {
-            widget.onNavTap!(i);
-          } else {
-            Navigator.pop(context);
-          }
-        },
-      ),
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: context.accentLight,
         onPressed: _openCreatePost,
@@ -146,7 +133,7 @@ class _SocialFeedViewState extends State<_SocialFeedView> {
                         final item = state.items[itemIndex];
                         final post = item.post;
                         final cubit = context.read<SocialFeedCubit>();
-                        return PostCard(
+                        return FeedCard(
                           post: post,
                           currentUserId: widget.currentUserId,
                           repostedBy: item.repostedBy,

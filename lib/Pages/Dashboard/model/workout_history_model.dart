@@ -31,6 +31,28 @@ class WorkoutHistoryModel {
     );
   }
 
+  Map<String, dynamic> toCacheMap() {
+    return {
+      'id': id,
+      'name': name,
+      'date': date.toIso8601String(),
+      'duration_seconds': durationSeconds,
+      'exerciseCount': exerciseCount,
+      'totalSets': totalSets,
+    };
+  }
+
+  factory WorkoutHistoryModel.fromCacheMap(Map<String, dynamic> map) {
+    return WorkoutHistoryModel(
+      id: map['id'] as String,
+      name: map['name'] as String? ?? 'Workout',
+      date: DateTime.parse(map['date'] as String),
+      durationSeconds: map['duration_seconds'] as int? ?? 0,
+      exerciseCount: map['exerciseCount'] as int? ?? 0,
+      totalSets: map['totalSets'] as int? ?? 0,
+    );
+  }
+
   String get formattedDuration {
     final mins = durationSeconds ~/ 60;
     if (mins == 0) return '< 1 min';

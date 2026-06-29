@@ -123,6 +123,7 @@ class ProfileRepository {
     required String email,
     required double weightKg,
     String? gender,
+    int? restDaysPerWeek,
   }) async {
     // 1. Update Users table
     await _supabase
@@ -133,6 +134,7 @@ class ProfileRepository {
           'email': email,
           'weight(kg)': weightKg,
           'Gender': gender,
+          'rest_days_per_week': restDaysPerWeek,
         })
         .eq('id', userId);
 

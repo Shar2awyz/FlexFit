@@ -3,15 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flex_fit/Pages/AddExercise/view/AddExercisePage.dart';
-import 'package:flex_fit/Pages/Components/CustomBottomNavBar.dart';
 import 'package:flex_fit/Pages/Components/app_route.dart';
-import 'package:flex_fit/Pages/Dashboard/View/Dashboard.dart';
-import 'package:flex_fit/Pages/Exercises.dart';
-import 'package:flex_fit/Pages/Social/view/SocialFeedPage.dart';
+import 'package:flex_fit/Pages/Components/CongratsPRDialog.dart';
 import 'package:flex_fit/Pages/Social/view/FriendsListPage.dart';
 import 'package:flex_fit/Pages/ExerciseHistory/view/ExerciseHistoryPage.dart';
-import 'package:flex_fit/Pages/StartWorkout/view/StartWorkoutPage.dart';
 import 'package:flex_fit/theme/app_colors.dart';
 import 'package:flex_fit/services/settings_service.dart';
 import '../ProfileRepository.dart';
@@ -95,7 +92,16 @@ class _ProfileViewState extends State<_ProfileView> {
     final val = double.tryParse(ctrl.text.trim());
     if (val == null) return;
     final goalKg = isKg ? val : val / 2.205;
+    final prevProgress = t.progress;
     await vm.setGoal(t.id, goalKg);
+
+    if (mounted) {
+      final updatedT = vm.trackedExercises.firstWhere((element) => element.id == t.id);
+      final newProgress = updatedT.progress;
+      if ((prevProgress == null || prevProgress < 1.0) && newProgress != null && newProgress >= 1.0) {
+        await CongratsPRDialog.show(context, [t.name]);
+      }
+    }
   }
 
   Future<void> _editWeight(
@@ -182,44 +188,7 @@ class _ProfileViewState extends State<_ProfileView> {
           const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 3,
-        onTap: (i) {
-          if (i == 3) return;
-          switch (i) {
-            case 0:
-              Navigator.pushReplacement(context,
-                  appRoute((_) => Dashboard(userid: widget.userid)));
-              break;
-            case 1:
-              Navigator.pushReplacement(context,
-                  appRoute((_) => StartWorkout(userid: widget.userid)));
-              break;
-            case 2:
-              Navigator.pushReplacement(context,
-                  appRoute((_) => Exercises(userid: widget.userid)));
-              break;
-            case 4:
-              Navigator.push(
-                context,
-                appRoute((_) => SocialFeedPage(
-                  currentUserId: widget.userid,
-                  onNavTap: (tab) {
-                    Navigator.pop(context);
-                    if (tab == 0) {
-                      Navigator.pushReplacement(context, appRoute((_) => Dashboard(userid: widget.userid)));
-                    } else if (tab == 1) {
-                      Navigator.pushReplacement(context, appRoute((_) => StartWorkout(userid: widget.userid)));
-                    } else if (tab == 2) {
-                      Navigator.pushReplacement(context, appRoute((_) => Exercises(userid: widget.userid)));
-                    }
-                  },
-                )),
-              );
-              break;
-          }
-        },
-      ),
+
       body: vm.isLoading
           ? Center(
               child: Lottie.asset(
@@ -287,12 +256,13 @@ class _ProfileViewState extends State<_ProfileView> {
             backgroundColor: Colors.white24,
             child: ClipOval(
               child: photoUrl != null && photoUrl.isNotEmpty
-                  ? Image.network(
-                      photoUrl,
+                  ? CachedNetworkImage(
+                      imageUrl: photoUrl,
                       width: r * 2,
                       height: r * 2,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) =>
+                      placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                      errorWidget: (_, _, _) =>
                           Icon(Icons.person, size: r, color: Colors.white),
                     )
                   : Icon(Icons.person, size: r, color: Colors.white),

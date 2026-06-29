@@ -1,15 +1,13 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class HeaderSection extends StatelessWidget {
+  final String title;
+  final String description;
 
-  String title;
-String description;
-   HeaderSection({super.key,required this.title,required this.description});
+  const HeaderSection({super.key, required this.title, required this.description});
 
   @override
   Widget build(BuildContext context) {
-    String name=this.title;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
